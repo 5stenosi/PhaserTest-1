@@ -1,0 +1,23 @@
+@font-face {
+    font-family: "PixelOperator";
+    src: url("../assets/fonts/PixelOperator.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+canvas {
+    cursor: url("../assets/cursors/cursor-default.png"), auto;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* evita scroll */
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
