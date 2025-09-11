@@ -1,4 +1,5 @@
 import BootScene from "./scenes/BootScene.js";
+import StartScene from "./scenes/StartScene.js";
 import MainMenuScene from "./scenes/MainMenuScene.js";
 import { colors } from "./colors.js";
 
@@ -8,7 +9,7 @@ const config = {
     // dove montare il canvas
     parent: "game",
     backgroundColor: colors.matisse,
-    scene: [BootScene, MainMenuScene],
+    scene: [BootScene, StartScene, MainMenuScene],
     scale: {
         width: 900,
         height: 600,

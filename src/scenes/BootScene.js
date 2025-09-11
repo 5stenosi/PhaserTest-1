@@ -1,3 +1,5 @@
+import { colors } from "../colors.js";
+
 export default class BootScene extends Phaser.Scene {
     // Imposta a true per forzare almeno 1 secondo di caricamento
     static forceMinLoadTime = false;
@@ -5,60 +7,83 @@ export default class BootScene extends Phaser.Scene {
         super("BootScene");
     }
 
+
     preload() {
         // Background nero
-        this.cameras.main.setBackgroundColor("#000000");
+        this.cameras.main.setBackgroundColor(colors.matisse);
 
         const centerX = this.cameras.main.width / 2;
         const centerY = this.cameras.main.height / 2;
-        // Crea una graphics per disegnare un arco (stroke) come indicatore di caricamento
         this.loaderArc = this.add.graphics({ x: centerX, y: centerY });
-        const radius = 50;
-        const startAngle = Phaser.Math.DegToRad(-90); // inizia in alto
-        const endAngle = Phaser.Math.DegToRad(-90 + 270); // 75% di cerchio (270°)
-        this.loaderArc.lineStyle(10, 0xffffff, 1);
-        this.loaderArc.beginPath();
-        this.loaderArc.arc(0, 0, radius, startAngle, endAngle, false);
-        this.loaderArc.strokePath();
-        // Crea una tween per ruotare l'arco all'infinito
-        this.tweens.add({
-            targets: this.loaderArc,
-            angle: 360,
-            duration: 1000,
-            repeat: -1
+        this.loaderArcRadius = 60;
+        this.loaderArcColor = parseInt(colors.tacao.replace('#', '0x'));
+        this.drawLoaderArc(0);
+
+        this.load.on('progress', (value) => {
+            this.drawLoaderArc(value);
+        });
+        this.load.on('complete', () => {
+            this.drawLoaderArc(1);
         });
 
-        // Carica font con WebFont Loader
+        // Carica WebFont Loader
         this.load.script("webfont", "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js");
 
         // Carica i cursori personalizzati
         this.load.image('cursor-default', 'assets/cursors/cursor-default.png');
+
+        // Carica le immagini
+        this.load.image('mainMenuBattleship', 'assets/img/battleShip-1.png');
+        this.load.image('startButtonInactive', 'assets/img/startButtonInactive.png');
+        this.load.image('startButtonActive', 'assets/img/startButtonActive.png');
+        this.load.image('volumeOnInactive', 'assets/img/volumeOnInactive.png');
+        this.load.image('volumeOnActive', 'assets/img/volumeOnActive.png');
+        this.load.image('volumeLowInactive', 'assets/img/volumeLowInactive.png');
+        this.load.image('volumeLowActive', 'assets/img/volumeLowActive.png');
+        this.load.image('volumeOffInactive', 'assets/img/volumeOffInactive.png');
+        this.load.image('volumeOffActive', 'assets/img/volumeOffActive.png');
+
+        // Carica i file audio
+        this.load.audio('menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3');
     }
 
     create() {
-        const useMinLoad = BootScene.forceMinLoadTime;
-        if (useMinLoad) {
-            this.bootStartTime = this.time.now;
+        // Carica i font tramite WebFont Loader e avvia la scena Start solo dopo che i font sono pronti
+        if (window.WebFont) {
+            this.loadFontsAndStart();
+        } else {
+            // WebFont Loader potrebbe non essere ancora pronto, aspetta che venga caricato
+            this.time.delayedCall(100, () => this.create());
         }
-        WebFont.load({
+    }
+
+    loadFontsAndStart() {
+        window.WebFont.load({
             custom: {
-                families: ["PixelOperator"], // deve corrispondere al nome in @font-face
+                families: ["PixelOperator8", "PixelOperator8-Bold"],
+                urls: [
+                    "assets/fonts/PixelOperator8.ttf",
+                    "assets/fonts/PixelOperator8-Bold.ttf"
+                ]
             },
             active: () => {
-                if (useMinLoad) {
-                    const elapsed = this.time.now - this.bootStartTime;
-                    const minDuration = 1000; // 1 secondo
-                    if (elapsed >= minDuration) {
-                        this.scene.start("MainMenuScene");
-                    } else {
-                        this.time.delayedCall(minDuration - elapsed, () => {
-                            this.scene.start("MainMenuScene");
-                        });
-                    }
-                } else {
-                    this.scene.start("MainMenuScene");
-                }
+                this.scene.start("StartScene");
             },
+            inactive: () => {
+                // Anche se fallisce, prova comunque ad avviare la scena
+                this.scene.start("StartScene");
+            }
         });
+    }
+
+    // Disegna l'arco di caricamento in base al progresso (da 0 a 1)
+    drawLoaderArc(progress) {
+        this.loaderArc.clear();
+        this.loaderArc.lineStyle(10, this.loaderArcColor, 1);
+        const startAngle = Phaser.Math.DegToRad(-90);
+        const endAngle = Phaser.Math.DegToRad(-90 + 360 * progress);
+        this.loaderArc.beginPath();
+        this.loaderArc.arc(0, 0, this.loaderArcRadius, startAngle, endAngle, false);
+        this.loaderArc.strokePath();
     }
 }

@@ -1,19 +1,29 @@
 @font-face {
-    font-family: "PixelOperator";
-    src: url("../assets/fonts/PixelOperator.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
+  font-family: "PixelOperator8";
+  src: url("../assets/fonts/PixelOperator8.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'PixelOperator8-Bold';
+  src: url('../assets/fonts/PixelOperator8-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
 }
 
 canvas {
-    cursor: url("../assets/cursors/cursor-default.png"), auto;
+  cursor: url("../assets/cursors/cursor-default.png"), auto;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* evita scroll */
+  overflow: hidden;
+  /* evita scroll */
   height: 100%;
+  background-color: #222c36;
 }
 
 canvas {

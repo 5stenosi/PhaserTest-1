@@ -17,11 +17,14 @@ export class TextButton extends Phaser.GameObjects.Text {
 
         this.setInteractive()
             .setPadding(16, 10)
-            .on('pointerdown', () => {
+            .on('pointerdown', (pointer, localX, localY, event) => {
                 this._isPointerDown = true;
                 this.enterButtonActiveState();
             })
-            .on('pointerup', () => {
+            .on('pointerup', (pointer, localX, localY, event) => {
+                if (this._isPointerDown) {
+                    this.emit('buttonclick', pointer, localX, localY, event);
+                }
                 this._isPointerDown = false;
                 this.enterButtonInactiveState();
             })
@@ -33,6 +36,12 @@ export class TextButton extends Phaser.GameObjects.Text {
                     this.enterButtonActiveState();
                 }
             });
+
+        // Listener globale per pointerup sulla scena
+        scene.input.on('pointerup', () => {
+            this._isPointerDown = false;
+            this.enterButtonInactiveState();
+        });
 
     }
 
