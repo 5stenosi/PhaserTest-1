@@ -2,6 +2,7 @@ import { TextButton } from "../game-objects/text-button.js";
 import { ImageButton } from "../game-objects/image-button.js";
 import { I18n } from "../i18n/i18n.js";
 import { translations } from "../i18n/translations.js";
+import { changelogData } from "../changelog.js";
 import { colors } from "../colors.js";
 
 export default class MainMenuScene extends Phaser.Scene {
@@ -10,17 +11,27 @@ export default class MainMenuScene extends Phaser.Scene {
     }
 
     create() {
-        // Avvia la musica di menu se non già avviata
+        // Stato volume: 1 = alto, 0.7 = medio, 0 = muto
+        this.volumeLevel = 0.7; // valori: 1, 0.7, 0
+
+        // Avvia la musica di menu se non già avviata, con volume coerente al livello intermedio
         if (!this.menuMusic) {
-            this.menuMusic = this.sound.add('menuMusic', { loop: true, volume: 1 });
+            // volume: 0.1 corrisponde al livello intermedio
+            const initialVolume = this.volumeLevel === 1 ? 0.6 : this.volumeLevel === 0.7 ? 0.1 : 0;
+            this.menuMusic = this.sound.add('menuMusic', { loop: true, volume: initialVolume });
             this.menuMusic.play();
         }
+
+        // Sincronizza lingua attiva con I18n
+        this.availableLangs = Object.keys(translations);
+        this.currentLangIndex = this.availableLangs.indexOf(I18n.currentLang);
+        if (this.currentLangIndex === -1) this.currentLangIndex = 0;
         // Titolo del gioco in uppercase
         const lines = [
-            "The Sea",
-            "Has",
-            "No",
-            "Claim"
+            "Bones",
+            "Do",
+            "Rest",
+            "Beneath",
         ];
         const lineHeight = 100;
         this.titleTexts = lines.map((line, i) => {
@@ -29,7 +40,6 @@ export default class MainMenuScene extends Phaser.Scene {
                 fontSize: "72px",
                 color: colors.tacao,
             }).setOrigin(0.5, 0);
-            // Ombra verso il basso a destra
             t.setShadow(-8, 3, colors.matisse, 0);
             return t;
         });
@@ -62,8 +72,6 @@ export default class MainMenuScene extends Phaser.Scene {
         }).setOrigin(0.5, 1);
 
 
-        // Stato volume: 1 = alto, 0.5 = medio, 0 = muto
-        this.volumeLevel = 1; // valori: 1, 0.7, 0
         this.updateVolumeButtonTextures = () => {
             if (this.volumeLevel === 1) {
                 this.volumeButton.textureInactive = 'volumeOnInactive';
@@ -148,9 +156,62 @@ export default class MainMenuScene extends Phaser.Scene {
         });
 
 
+
+        // --- Gruppo per bottoni github e versioning ---
+        // Crea un container Phaser per raggruppare i due bottoni
+        this.topRightButtonsGroup = this.add.container();
+
+        // Bottone Github
+        this.githubButton = new ImageButton(
+            this,
+            0, // X relativo al container
+            0, // Y relativo al container
+            'githubInactive',
+            'githubActive'
+        ).setOrigin(1, 0);
+        this.topRightButtonsGroup.add(this.githubButton);
+
+        // Bottone Versione (dinamico dalla changelog)
+        let latestVersion = "v0.0.0";
+        if (Array.isArray(changelogData) && changelogData.length > 0) {
+            // Trova la entry con la data più recente (formato DD-MM-YYYY)
+            const sorted = [...changelogData].sort((a, b) => {
+                const [da, ma, ya] = a.date.split("-").map(Number);
+                const [db, mb, yb] = b.date.split("-").map(Number);
+                // YYYYMMDD per confronto
+                const numA = ya * 10000 + ma * 100 + da;
+                const numB = yb * 10000 + mb * 100 + db;
+                return numB - numA;
+            });
+            latestVersion = sorted[0].version;
+        }
+        this.versionText = new TextButton(this, 0, 0, latestVersion, {
+            fontFamily: "PixelOperator8",
+            fontSize: "16px",
+            color: colors.tacao,
+            activeColor: colors.matisse,
+            backgroundColor: "rgba(0,0,0,0)",
+            activeBackground: colors.tacao
+        }).setOrigin(1, 0);
+        // Posiziona il bottone versione a sinistra del bottone github
+        this.versionText.x = -this.githubButton.width; // 10px di spazio tra i bottoni
+        this.topRightButtonsGroup.add(this.versionText);
+
+        // Posiziona il gruppo nell'angolo in alto a destra
+        this.topRightButtonsGroup.x = 865; // Coordinata X assoluta
+        this.topRightButtonsGroup.y = 25;  // Coordinata Y assoluta
+
+        // Listener per il bottone github
+        this.githubButton.on('buttonclick', () => {
+            window.open('https://github.com/5stenosi/PhaserTest-1', '_blank');
+        });
+
+        // Listener per il bottone versione
+        this.versionText.on('buttonclick', () => {
+            this.scene.start('ChangeLogScene');
+        });
+
         // bottone lingua
-        this.availableLangs = Object.keys(translations);
-        this.currentLangIndex = 0;
         this.langButton = new TextButton(this, 35, 575, this.availableLangs[this.currentLangIndex], {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "28px",
@@ -177,10 +238,9 @@ export default class MainMenuScene extends Phaser.Scene {
             activeBackground: colors.tacao
         }).setOrigin(1, 1);
         this.add.existing(this.startGameButton);
-        // esempio: azione sul click del bottone start (da personalizzare)
+
         this.startGameButton.on('buttonclick', () => {
-            // Avvia la scena di gioco o altra azione
-            // this.scene.start('GameScene');
+            this.scene.start('SelectionScene');
         });
     }
 

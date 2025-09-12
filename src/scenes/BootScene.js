@@ -34,14 +34,21 @@ export default class BootScene extends Phaser.Scene {
 
         // Carica le immagini
         this.load.image('mainMenuBattleship', 'assets/img/battleShip-1.png');
+        
         this.load.image('startButtonInactive', 'assets/img/startButtonInactive.png');
         this.load.image('startButtonActive', 'assets/img/startButtonActive.png');
+        
         this.load.image('volumeOnInactive', 'assets/img/volumeOnInactive.png');
         this.load.image('volumeOnActive', 'assets/img/volumeOnActive.png');
         this.load.image('volumeLowInactive', 'assets/img/volumeLowInactive.png');
         this.load.image('volumeLowActive', 'assets/img/volumeLowActive.png');
         this.load.image('volumeOffInactive', 'assets/img/volumeOffInactive.png');
         this.load.image('volumeOffActive', 'assets/img/volumeOffActive.png');
+        
+        this.load.image('githubInactive', 'assets/img/githubInactive.png');
+        this.load.image('githubActive', 'assets/img/githubActive.png');
+
+        this.load.image('changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg');
 
         // Carica i file audio
         this.load.audio('menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3');
