@@ -19,6 +19,7 @@ export const changelogData = [
         features: [
             "feature_languageDetection",
             "fix_verticalLineLength",
+            "fix_cache",
         ]
     },
 ];

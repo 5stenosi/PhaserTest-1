@@ -15,6 +15,7 @@ export const translations = {
         feature_versioning: "Versioning system",
         feature_languageDetection: "Language detection from browser",
         fix_verticalLineLength: "Fixed vertical line length",
+        fix_cache: "Disabled caching",
     },
     it: {
         start: "Gioca",
@@ -32,5 +33,6 @@ export const translations = {
         feature_versioning: "Sistema di versionamento",
         feature_languageDetection: "Rilevamento lingua dal browser",
         fix_verticalLineLength: "Corrette lunghezze linee verticali",
+        fix_cache: "Cache disabilitata",
     },
 };
