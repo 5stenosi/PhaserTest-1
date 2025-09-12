@@ -72,6 +72,36 @@ export default class MainMenuScene extends Phaser.Scene {
         }).setOrigin(0.5, 1);
 
 
+
+        // --- Gruppo volume + fullscreen in alto a sinistra ---
+        this.topLeftButtonsGroup = this.add.container();
+
+
+        // Bottone fullscreen (ora a sinistra)
+        this.fullScreenButton = new ImageButton(
+            this,
+            0,
+            0,
+            'fullScreenOffInactive',
+            'fullScreenOffActive'
+        ).setOrigin(0, 0);
+        this.topLeftButtonsGroup.add(this.fullScreenButton);
+
+        // Bottone volume (ora a destra del fullscreen)
+        this.volumeButton = new ImageButton(
+            this,
+            this.fullScreenButton.width,
+            0,
+            'volumeOnInactive',
+            'volumeOnActive'
+        ).setOrigin(0, 0);
+        this.topLeftButtonsGroup.add(this.volumeButton);
+
+        // Posiziona il gruppo in alto a sinistra
+        this.topLeftButtonsGroup.x = 35;
+        this.topLeftButtonsGroup.y = 25;
+
+        // Funzione per aggiornare la texture del bottone volume
         this.updateVolumeButtonTextures = () => {
             if (this.volumeLevel === 1) {
                 this.volumeButton.textureInactive = 'volumeOnInactive';
@@ -85,15 +115,6 @@ export default class MainMenuScene extends Phaser.Scene {
             }
             this.volumeButton.setTexture(this.volumeButton.textureInactive);
         };
-
-        this.volumeButton = new ImageButton(
-            this,
-            35,
-            25,
-            'volumeOnInactive',
-            'volumeOnActive'
-        ).setOrigin(0, 0);
-        this.add.existing(this.volumeButton);
         this.updateVolumeButtonTextures();
 
         // Toggle volume on click
@@ -152,6 +173,23 @@ export default class MainMenuScene extends Phaser.Scene {
                         }
                     });
                 }
+            }
+        });
+
+        // Listener per il bottone fullscreen
+        this.fullScreenButton.on('buttonclick', () => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+                // Torna alle icone "entrambe OFF"
+                this.fullScreenButton.textureInactive = 'fullScreenOffInactive';
+                this.fullScreenButton.textureActive = 'fullScreenOffActive';
+                this.fullScreenButton.setTexture('fullScreenOffInactive');
+            } else {
+                this.scale.startFullscreen();
+                // Cambia alle icone "entrambe ON"
+                this.fullScreenButton.textureInactive = 'fullScreenOnInactive';
+                this.fullScreenButton.textureActive = 'fullScreenOnActive';
+                this.fullScreenButton.setTexture('fullScreenOnInactive');
             }
         });
 

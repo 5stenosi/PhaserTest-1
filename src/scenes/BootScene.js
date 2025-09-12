@@ -47,6 +47,11 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('volumeOffInactive', 'assets/img/volumeOffInactive.png');
         this.load.image('volumeOffActive', 'assets/img/volumeOffActive.png');
 
+        this.load.image('fullScreenOffInactive', 'assets/img/fullscreenOffInactive.png');
+        this.load.image('fullScreenOffActive', 'assets/img/fullscreenOffActive.png');
+        this.load.image('fullScreenOnInactive', 'assets/img/fullscreenOnInactive.png');
+        this.load.image('fullScreenOnActive', 'assets/img/fullscreenOnActive.png');
+
         this.load.image('githubInactive', 'assets/img/githubInactive.png');
         this.load.image('githubActive', 'assets/img/githubActive.png');
 
