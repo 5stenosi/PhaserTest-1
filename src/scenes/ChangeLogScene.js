@@ -58,14 +58,26 @@ export default class ChangeLogScene extends Phaser.Scene {
         const ENTRY_PADDING = 20;
         let currentY = 0;
         this.entries = [];
-        // Ordina le entries per data decrescente (più recente in alto)
+        // Ordina le entries per data decrescente, e a parità di data per versione decrescente
         const sortedChangelog = [...changelogData].sort((a, b) => {
             const [da, ma, ya] = a.date.split("-").map(Number);
             const [db, mb, yb] = b.date.split("-").map(Number);
             // YYYYMMDD per confronto
             const numA = ya * 10000 + ma * 100 + da;
             const numB = yb * 10000 + mb * 100 + db;
-            return numB - numA;
+            if (numB !== numA) {
+                return numB - numA;
+            }
+            // Se la data è uguale, confronta la versione (es: 1.2.0 > 1.1.9)
+            const parseVersion = v => v.split('.').map(Number);
+            const va = parseVersion(a.version);
+            const vb = parseVersion(b.version);
+            for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+                const na = va[i] || 0;
+                const nb = vb[i] || 0;
+                if (nb !== na) return nb - na;
+            }
+            return 0;
         });
         sortedChangelog.forEach((entry, idx) => {
             const entryContainer = this.add.container(0, currentY);
@@ -129,16 +141,19 @@ export default class ChangeLogScene extends Phaser.Scene {
         });
 
         // Ora che conosciamo currentY (altezza totale entries), disegniamo le linee tratteggiate verticali sull'intero blocco scrollabile
+        // L'altezza minima delle linee verticali deve essere almeno pari all'altezza del container visibile (bgHeight)
+        const verticalLineHeight = Math.max(currentY, bgHeight);
+
         // Prima linea: tra versione e funzionalità
         const line1 = this.add.graphics();
         line1.lineStyle(2, Phaser.Display.Color.HexStringToColor(colors.matisse).color, 1);
         let dashY = 0;
-        while (dashY < currentY) {
+        while (dashY < verticalLineHeight) {
             line1.beginPath();
             // 10px di stacco da sopra e da sotto
-            if (dashY + dashHeight <= currentY - 10 && dashY >= 10) {
+            if (dashY + dashHeight <= verticalLineHeight - 10 && dashY >= 10) {
                 line1.moveTo(-bgWidth / 2 + versionColWidth, dashY);
-                line1.lineTo(-bgWidth / 2 + versionColWidth, Math.min(dashY + dashHeight, currentY - 10));
+                line1.lineTo(-bgWidth / 2 + versionColWidth, Math.min(dashY + dashHeight, verticalLineHeight - 10));
             }
             line1.strokePath();
             dashY += dashHeight + gap;
@@ -149,11 +164,11 @@ export default class ChangeLogScene extends Phaser.Scene {
         const line2 = this.add.graphics();
         line2.lineStyle(2, Phaser.Display.Color.HexStringToColor(colors.matisse).color, 1);
         dashY = 0;
-        while (dashY < currentY) {
+        while (dashY < verticalLineHeight) {
             line2.beginPath();
-            if (dashY + dashHeight <= currentY - 10 && dashY >= 10) {
+            if (dashY + dashHeight <= verticalLineHeight - 10 && dashY >= 10) {
                 line2.moveTo(-bgWidth / 2 + versionColWidth + featuresWidth, dashY);
-                line2.lineTo(-bgWidth / 2 + versionColWidth + featuresWidth, Math.min(dashY + dashHeight, currentY - 10));
+                line2.lineTo(-bgWidth / 2 + versionColWidth + featuresWidth, Math.min(dashY + dashHeight, verticalLineHeight - 10));
             }
             line2.strokePath();
             dashY += dashHeight + gap;
@@ -197,8 +212,6 @@ export default class ChangeLogScene extends Phaser.Scene {
         this.input.on('pointerup', () => {
             this.isDragging = false;
         });
-
-
 
 
 

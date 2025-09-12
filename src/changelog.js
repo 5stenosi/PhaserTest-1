@@ -13,4 +13,12 @@ export const changelogData = [
             "feature_versioning",
         ]
     },
+    {
+        version: "v0.2.0",
+        date: "12-09-2025",
+        features: [
+            "feature_languageDetection",
+            "fix_verticalLineLength",
+        ]
+    },
 ];

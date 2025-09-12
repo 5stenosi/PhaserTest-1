@@ -13,6 +13,8 @@ export const translations = {
         feature_github: "Link to GitHub repository",
         feature_changeLogScene: "Changelog",
         feature_versioning: "Versioning system",
+        feature_languageDetection: "Language detection from browser",
+        fix_verticalLineLength: "Fixed vertical line length",
     },
     it: {
         start: "Gioca",
@@ -28,5 +30,7 @@ export const translations = {
         feature_github: "Link alla repository GitHub",
         feature_changeLogScene: "Changelog",
         feature_versioning: "Sistema di versionamento",
+        feature_languageDetection: "Rilevamento lingua dal browser",
+        fix_verticalLineLength: "Corrette lunghezze linee verticali",
     },
 };

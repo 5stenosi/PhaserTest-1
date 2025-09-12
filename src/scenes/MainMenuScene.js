@@ -174,14 +174,31 @@ export default class MainMenuScene extends Phaser.Scene {
         // Bottone Versione (dinamico dalla changelog)
         let latestVersion = "v0.0.0";
         if (Array.isArray(changelogData) && changelogData.length > 0) {
-            // Trova la entry con la data più recente (formato DD-MM-YYYY)
+            // Trova la entry più recente: se la data è uguale, conta la versione più "grande"
+            const compareVersions = (v1, v2) => {
+                // Rimuove la 'v' iniziale e confronta come array di numeri
+                const a = v1.replace(/^v/, '').split('.').map(Number);
+                const b = v2.replace(/^v/, '').split('.').map(Number);
+                for (let i = 0; i < Math.max(a.length, b.length); i++) {
+                    const na = a[i] || 0;
+                    const nb = b[i] || 0;
+                    if (na > nb) return 1;
+                    if (na < nb) return -1;
+                }
+                return 0;
+            };
             const sorted = [...changelogData].sort((a, b) => {
                 const [da, ma, ya] = a.date.split("-").map(Number);
                 const [db, mb, yb] = b.date.split("-").map(Number);
                 // YYYYMMDD per confronto
                 const numA = ya * 10000 + ma * 100 + da;
                 const numB = yb * 10000 + mb * 100 + db;
-                return numB - numA;
+                if (numB !== numA) {
+                    return numB - numA;
+                } else {
+                    // Se la data è uguale, confronta la versione
+                    return compareVersions(b.version, a.version);
+                }
             });
             latestVersion = sorted[0].version;
         }

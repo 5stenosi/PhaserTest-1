@@ -1,5 +1,7 @@
 import { colors } from "../colors.js";
 
+import { I18n } from "../i18n/i18n.js";
+
 export default class BootScene extends Phaser.Scene {
     // Imposta a true per forzare almeno 1 secondo di caricamento
     static forceMinLoadTime = false;
@@ -34,17 +36,17 @@ export default class BootScene extends Phaser.Scene {
 
         // Carica le immagini
         this.load.image('mainMenuBattleship', 'assets/img/battleShip-1.png');
-        
+
         this.load.image('startButtonInactive', 'assets/img/startButtonInactive.png');
         this.load.image('startButtonActive', 'assets/img/startButtonActive.png');
-        
+
         this.load.image('volumeOnInactive', 'assets/img/volumeOnInactive.png');
         this.load.image('volumeOnActive', 'assets/img/volumeOnActive.png');
         this.load.image('volumeLowInactive', 'assets/img/volumeLowInactive.png');
         this.load.image('volumeLowActive', 'assets/img/volumeLowActive.png');
         this.load.image('volumeOffInactive', 'assets/img/volumeOffInactive.png');
         this.load.image('volumeOffActive', 'assets/img/volumeOffActive.png');
-        
+
         this.load.image('githubInactive', 'assets/img/githubInactive.png');
         this.load.image('githubActive', 'assets/img/githubActive.png');
 
@@ -74,13 +76,25 @@ export default class BootScene extends Phaser.Scene {
                 ]
             },
             active: () => {
+                this.setLanguageFromBrowser();
                 this.scene.start("StartScene");
             },
             inactive: () => {
                 // Anche se fallisce, prova comunque ad avviare la scena
+                this.setLanguageFromBrowser();
                 this.scene.start("StartScene");
             }
         });
+    }
+
+    setLanguageFromBrowser() {
+        // Prova a rilevare la lingua del browser e impostala se supportata
+        const supportedLangs = ["en", "it"];
+        let browserLang = navigator.language || (navigator.languages && navigator.languages[0]) || "en";
+        browserLang = browserLang.split("-")[0].toLowerCase();
+        if (supportedLangs.includes(browserLang)) {
+            I18n.setLang(browserLang);
+        }
     }
 
     // Disegna l'arco di caricamento in base al progresso (da 0 a 1)
