@@ -15,17 +15,18 @@ export default class SelectionScene extends Phaser.Scene {
         this.titleText = this.add.text(this.cameras.main.centerX, 35, I18n.t("selectionSceneTitle"), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "48px",
+            resolution: 2,
             color: colors.matisse,
             align: "center",
             wordWrap: { width: this.cameras.main.width - 50 },
-            lineSpacing: 5
+            lineSpacing: 5,
         }).setOrigin(0.5, 0).setShadow(-8, 3, colors.tacao, 0);
 
 
         // bottone per tornare al menu principale
         this.backToMenuButton = new TextButton(this, 35, 575, I18n.t("backToMenu").toUpperCase(), {
             fontFamily: "PixelOperator8-Bold",
-            fontSize: "28px",
+            fontSize: "32px",
             color: colors.matisse,
             activeColor: colors.tacao,
             backgroundColor: colors.tacao,

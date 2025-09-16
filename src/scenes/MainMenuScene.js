@@ -26,6 +26,7 @@ export default class MainMenuScene extends Phaser.Scene {
         this.availableLangs = Object.keys(translations);
         this.currentLangIndex = this.availableLangs.indexOf(I18n.currentLang);
         if (this.currentLangIndex === -1) this.currentLangIndex = 0;
+
         // Titolo del gioco in uppercase
         const lines = [
             "Bones",
@@ -37,15 +38,20 @@ export default class MainMenuScene extends Phaser.Scene {
         this.titleTexts = lines.map((line, i) => {
             const t = this.add.text(this.cameras.main.centerX, 50 + i * lineHeight, line.toUpperCase(), {
                 fontFamily: "PixelOperator8-Bold",
-                fontSize: "72px",
+                fontSize: "80px",
+                resolution: 2,
                 color: colors.tacao,
             }).setOrigin(0.5, 0);
-            t.setShadow(-8, 3, colors.matisse, 0);
+            t.setShadow(-16, 6, colors.matisse, 0);
             return t;
         });
 
 
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'mainMenuBattleship').setOrigin(0.5, 0.5).setScale(-1, 1).setDepth(-1);
+        this.textures.get('mainMenuBattleship').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        this.add.image(450, 300, 'mainMenuBattleship')
+            .setOrigin(0.5, 0.5)
+            .setScale(-1, 1)
+            .setDepth(-1);
 
 
         // Effetto lampeggio
@@ -62,15 +68,28 @@ export default class MainMenuScene extends Phaser.Scene {
         showTexts();
 
 
-        // credits con maggiore stacco tra le righe
-        this.creditsText = this.add.text(this.cameras.main.centerX, 575, I18n.t('credits'), {
+        this.instagramButton = new TextButton(this, this.cameras.main.centerX, 585, "@stenosi", {
             fontFamily: "PixelOperator8",
             fontSize: "16px",
             color: colors.tacao,
-            align: "center",
-            lineSpacing: 10
+            activeColor: colors.matisse,
+            backgroundColor: "rgba(0,0,0,0)",
+            activeBackground: colors.tacao,
         }).setOrigin(0.5, 1);
+        this.add.existing(this.instagramButton);
 
+        this.instagramButton.on('buttonclick', () => {
+            window.open('https://www.instagram.com/stenosi/', '_blank');
+        });
+
+        // credits con maggiore stacco tra le righe
+        this.creditsText = this.add.text(this.cameras.main.centerX, 585 - this.instagramButton.height, I18n.t('credits'), {
+            fontFamily: "PixelOperator8",
+            fontSize: "16px",
+            resolution: 2,
+            color: colors.tacao,
+            align: "center",
+        }).setOrigin(0.5, 1);
 
 
         // --- Gruppo volume + fullscreen in alto a sinistra ---
@@ -269,7 +288,7 @@ export default class MainMenuScene extends Phaser.Scene {
         // bottone lingua
         this.langButton = new TextButton(this, 35, 575, this.availableLangs[this.currentLangIndex], {
             fontFamily: "PixelOperator8-Bold",
-            fontSize: "28px",
+            fontSize: "32px",
             color: colors.tacao,
             activeColor: colors.matisse,
             backgroundColor: "rgba(0,0,0,0)",
@@ -286,7 +305,7 @@ export default class MainMenuScene extends Phaser.Scene {
         // bottone inizio gioco
         this.startGameButton = new TextButton(this, 865, 575, I18n.t('start').toUpperCase(), {
             fontFamily: "PixelOperator8-Bold",
-            fontSize: "28px",
+            fontSize: "32px",
             color: colors.tacao,
             activeColor: colors.matisse,
             backgroundColor: "rgba(0,0,0,0)",

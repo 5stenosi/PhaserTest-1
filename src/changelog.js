@@ -22,4 +22,15 @@ export const changelogData = [
             "feature_fullscreen",
         ]
     },
+    {
+        version: "v0.2.1",
+        date: "16-09-2025",
+        features: [
+            "fix_textPixelation",
+            "fix_fullscreenIcons",
+            "fix_volumeIcons",
+            "fix_startSceneButton",
+            "fix_instagramLink"
+        ]
+    },
 ];
