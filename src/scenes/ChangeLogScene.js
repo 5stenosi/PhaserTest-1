@@ -19,10 +19,9 @@ export default class ChangeLogScene extends Phaser.Scene {
         this.titleText = this.add.text(this.cameras.main.centerX, 35, I18n.t("changeLogSceneTitle"), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "48px",
-            resolution: 2,
+            resolution: 3,
             color: colors.tacao,
-        }).setOrigin(0.5, 0).setShadow(-8, 3, colors.matisse, 0);
-
+        }).setOrigin(0.5, 0).setShadow(-8, 5, colors.matisse, 0);
 
 
         // Dimensioni del background e del container visibile
@@ -50,9 +49,6 @@ export default class ChangeLogScene extends Phaser.Scene {
         const featuresWidth = bgWidth - versionColWidth - dateColWidth;
         const dashHeight = 2;
         const gap = 2;
-        // Le linee saranno aggiunte DOPO aver calcolato currentY (altezza totale entries)
-
-
 
 
         // Layout verticale dei changelog con altezza dinamica
@@ -87,7 +83,7 @@ export default class ChangeLogScene extends Phaser.Scene {
             const versionText = this.add.text(-bgWidth / 2 + 10, ENTRY_PADDING, entry.version, {
                 fontFamily: "PixelOperator8-Bold",
                 fontSize: "16px",
-                resolution: 2,
+                resolution: 3,
                 color: colors.matisse,
                 align: "left"
             }).setOrigin(0, 0);
@@ -98,7 +94,7 @@ export default class ChangeLogScene extends Phaser.Scene {
             const featuresText = this.add.text(-bgWidth / 2 + versionColWidth + 20, ENTRY_PADDING, featuresString, {
                 fontFamily: "PixelOperator8",
                 fontSize: "16px",
-                resolution: 2,
+                resolution: 3,
                 color: colors.matisse,
                 wordWrap: { width: featuresWidth - 20 },
                 align: "left",
@@ -110,7 +106,7 @@ export default class ChangeLogScene extends Phaser.Scene {
             const dateText = this.add.text(-bgWidth / 2 + versionColWidth + featuresWidth + 20, ENTRY_PADDING, entry.date, {
                 fontFamily: "PixelOperator8",
                 fontSize: "16px",
-                resolution: 2,
+                resolution: 3,
                 color: colors.matisse,
                 align: "left"
             }).setOrigin(0, 0);

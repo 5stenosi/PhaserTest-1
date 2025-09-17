@@ -17,7 +17,7 @@ export default class BootScene extends Phaser.Scene {
         const centerX = this.cameras.main.width / 2;
         const centerY = this.cameras.main.height / 2;
         this.loaderArc = this.add.graphics({ x: centerX, y: centerY });
-        this.loaderArcRadius = 60;
+        this.loaderArcRadius = 84;
         this.loaderArcColor = parseInt(colors.tacao.replace('#', '0x'));
         this.drawLoaderArc(0);
 
@@ -37,6 +37,8 @@ export default class BootScene extends Phaser.Scene {
         // Carica le immagini
         this.load.image('mainMenuBattleship', 'assets/img/battleShip-1.png');
 
+        this.load.image('rightArrow', 'assets/img/rightArrow.png');
+
         this.load.image('startButtonInactive', 'assets/img/startButtonInactive.png');
         this.load.image('startButtonActive', 'assets/img/startButtonActive.png');
 
@@ -52,16 +54,35 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('fullScreenOnInactive', 'assets/img/fullScreenOnInactive.png');
         this.load.image('fullScreenOnActive', 'assets/img/fullScreenOnActive.png');
 
+        this.load.image('battleship1x1', 'assets/img/battleship1x1.png');
+        this.load.image('battleship2x1', 'assets/img/battleship2x1.png');
+        this.load.image('battleship3x1', 'assets/img/battleship3x1.png');
+        this.load.image('battleship4x1', 'assets/img/battleship4x1.png');
+
         this.load.image('githubInactive', 'assets/img/githubInactive.png');
         this.load.image('githubActive', 'assets/img/githubActive.png');
 
         this.load.image('changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg');
+        this.load.image('selectionSceneBackground', 'assets/img/selectionSceneBackground.jpg');
 
         // Carica i file audio
         this.load.audio('menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3');
     }
 
+    // Imposta il filtro NEAREST solo sulle texture delle battleship
+    setBattleshipTexturesPixelPerfect() {
+        const keys = ['battleship1x1', 'battleship2x1', 'battleship3x1', 'battleship4x1'];
+        keys.forEach(key => {
+            const tex = this.textures.get(key);
+            if (tex) {
+                tex.setFilter && tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+            }
+        });
+    }
+
     create() {
+        // Imposta filtro pixel perfect solo per le battleship
+        this.setBattleshipTexturesPixelPerfect();
         // Carica i font tramite WebFont Loader e avvia la scena Start solo dopo che i font sono pronti
         if (window.WebFont) {
             this.loadFontsAndStart();
@@ -105,7 +126,7 @@ export default class BootScene extends Phaser.Scene {
     // Disegna l'arco di caricamento in base al progresso (da 0 a 1)
     drawLoaderArc(progress) {
         this.loaderArc.clear();
-        this.loaderArc.lineStyle(10, this.loaderArcColor, 1);
+        this.loaderArc.lineStyle(12, this.loaderArcColor, 1);
         const startAngle = Phaser.Math.DegToRad(-90);
         const endAngle = Phaser.Math.DegToRad(-90 + 360 * progress);
         this.loaderArc.beginPath();

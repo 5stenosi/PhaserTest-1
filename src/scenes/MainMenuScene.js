@@ -39,10 +39,10 @@ export default class MainMenuScene extends Phaser.Scene {
             const t = this.add.text(this.cameras.main.centerX, 50 + i * lineHeight, line.toUpperCase(), {
                 fontFamily: "PixelOperator8-Bold",
                 fontSize: "80px",
-                resolution: 2,
+                resolution: 3,
                 color: colors.tacao,
             }).setOrigin(0.5, 0);
-            t.setShadow(-16, 6, colors.matisse, 0);
+            t.setShadow(-16, 8, colors.matisse, 0);
             return t;
         });
 
@@ -86,7 +86,7 @@ export default class MainMenuScene extends Phaser.Scene {
         this.creditsText = this.add.text(this.cameras.main.centerX, 585 - this.instagramButton.height, I18n.t('credits'), {
             fontFamily: "PixelOperator8",
             fontSize: "16px",
-            resolution: 2,
+            resolution: 3,
             color: colors.tacao,
             align: "center",
         }).setOrigin(0.5, 1);

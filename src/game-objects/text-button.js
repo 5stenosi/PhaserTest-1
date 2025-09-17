@@ -1,8 +1,8 @@
 export class TextButton extends Phaser.GameObjects.Text {
     constructor(scene, x, y, text, style) {
+        style = { resolution: 3, ...style };
+        
         super(scene, x, y, text, style);
-
-        style = { resolution: 2, ...style };
 
         this._isPointerDown = false;
 

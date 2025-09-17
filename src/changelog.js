@@ -33,4 +33,16 @@ export const changelogData = [
             "fix_instagramLink"
         ]
     },
+    {
+        version: "v0.3.0",
+        date: "17-09-2025",
+        features: [
+            "feature_selectionScene",
+            "feature_placementGrid",
+            "feature_battleship",
+            "feature_battleshipDragAndDrop",
+            "feature_battleshipPlacement",
+            "feature_battleshipPlacementReset",
+        ]
+    },
 ];
