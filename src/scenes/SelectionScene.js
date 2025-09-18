@@ -3,6 +3,7 @@ import { DashedLine } from "../game-objects/dashed-line.js";
 import { I18n } from "../i18n/i18n.js";
 import { colors } from "../colors.js";
 import { Ship } from "../game-objects/ship.js";
+import { PopupManager } from "../game-objects/popup-manager.js";
 
 export default class SelectionScene extends Phaser.Scene {
     constructor() {
@@ -10,6 +11,9 @@ export default class SelectionScene extends Phaser.Scene {
     }
 
     create() {
+
+        PopupManager.initialize(this);
+
         // Dimensioni del background e del container visibile
         const bgWidth = this.cameras.main.width;
         const bgHeight = this.cameras.main.height;
@@ -68,30 +72,16 @@ export default class SelectionScene extends Phaser.Scene {
         };
 
         this.resetShipsButton.on('buttonclick', () => {
-            // Libera la matrice
-            for (let r = 0; r < gridSize; r++) {
-                for (let c = 0; c < gridSize; c++) {
-                    this.occupiedGrid[r][c] = null;
-                }
-            }
-            // Riposiziona tutte le navi e resetta la rotazione
-            this.ships.forEach((ship, idx) => {
-                if (typeof ship.initialX === 'number' && typeof ship.initialY === 'number') {
-                    ship.x = ship.initialX;
-                    ship.y = ship.initialY;
-                }
-                ship.isPlaced = false;
+            this.sound.play('clickSound');
+            // Libera la matrice e resetta tutte le navi tramite i loro metodi
+            this.ships.forEach(ship => ship.freeGrid(this.occupiedGrid));
+            // Anima il ritorno di tutte le navi alla posizione iniziale
+            Promise.all(this.ships.map(ship => ship.animateToInitialPosition(this))).then(() => {
+                updateResetButtonVisibility();
+                // Salva lo stato delle navi dopo il reset
+                const shipsPositions = this.ships.map(ship => ship.getState());
+                this.registry.set('shipsPositions', shipsPositions);
             });
-            updateResetButtonVisibility();
-            // Salva lo stato delle navi dopo il reset
-            const shipsPositions = this.ships.map(ship => ({
-                x: ship.x,
-                y: ship.y,
-                width: ship.widthCells,
-                height: ship.heightCells,
-                spriteKey: ship.spriteKey || null
-            }));
-            this.registry.set('shipsPositions', shipsPositions);
         });
 
         // Griglia 10x10 a destra
@@ -128,20 +118,44 @@ export default class SelectionScene extends Phaser.Scene {
         this.occupiedGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
         // Definizione delle navi disponibili (facilmente estendibile)
         this.shipsConfig = [
-            { width: 1, height: 1, color: colors.tacao, spriteKey: 'battleship1x1' },
-            { width: 2, height: 1, color: colors.tacao, spriteKey: 'battleship2x1' },
-            { width: 3, height: 1, color: colors.tacao, spriteKey: 'battleship3x1' },
-            { width: 4, height: 1, color: colors.tacao, spriteKey: 'battleship4x1' },
+            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
+            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
+            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
+            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
+            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
+            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
+            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
+            { width: 3, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship3x1-Inactive', spriteKeyActive: 'battleship3x1-Active' },
+            { width: 3, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship3x1-Inactive', spriteKeyActive: 'battleship3x1-Active' },
+            { width: 4, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship4x1-Inactive', spriteKeyActive: 'battleship4x1-Active' },
         ];
         this.ships = [];
         // Se ci sono dati salvati, ripristina le navi
         const savedShips = this.registry.get('shipsPositions');
         if (Array.isArray(savedShips) && savedShips.length === this.shipsConfig.length) {
+            // Va a capo ogni volta che cambia il tipo di nave
+            const startX = 50;
+            const startY = 120;
+            const maxWidth = gridX - 20;
+            let currentX = startX;
+            let currentY = startY;
+            let rowHeight = 0;
+            let prevType = null;
             this.shipsConfig.forEach((cfg, idx) => {
                 const saved = savedShips[idx];
+                const shipWidth = cfg.width * cellSize;
+                const shipHeight = cfg.height * cellSize;
+                // Va a capo se cambia tipo di nave
+                const currType = `${cfg.width}x${cfg.height}`;
+                if (prevType !== null && currType !== prevType) {
+                    currentX = startX;
+                    currentY += rowHeight + 10;
+                    rowHeight = 0;
+                }
+                prevType = currType;
                 const ship = new Ship(this, saved.x, saved.y, { ...cfg, cellSize });
-                ship.initialX = 50;
-                ship.initialY = 120 + idx * 50;
+                ship.initialX = currentX;
+                ship.initialY = currentY;
                 // Considera la nave "piazzata" se è nella griglia
                 if (
                     saved.x >= gridX &&
@@ -154,17 +168,35 @@ export default class SelectionScene extends Phaser.Scene {
                     ship.isPlaced = false;
                 }
                 this.ships.push(ship);
+                currentX += shipWidth + 10;
+                if (shipHeight > rowHeight) rowHeight = shipHeight;
             });
         } else {
-            // Posiziona le navi a sinistra della griglia
+            // Va a capo ogni volta che cambia il tipo di nave
+            const startX = 50;
+            const startY = 120;
+            const maxWidth = gridX - 175;
+            let currentX = startX;
+            let currentY = startY;
+            let rowHeight = 0;
+            let prevType = null;
             this.shipsConfig.forEach((cfg, idx) => {
-                const startX = 50;
-                const startY = 120 + idx * 50;
-                const ship = new Ship(this, startX, startY, { ...cfg, cellSize });
-                ship.initialX = startX;
-                ship.initialY = startY;
+                const shipWidth = cfg.width * cellSize;
+                const shipHeight = cfg.height * cellSize;
+                const currType = `${cfg.width}x${cfg.height}`;
+                if (prevType !== null && currType !== prevType) {
+                    currentX = startX;
+                    currentY += rowHeight + 10;
+                    rowHeight = 0;
+                }
+                prevType = currType;
+                const ship = new Ship(this, currentX, currentY, { ...cfg, cellSize });
+                ship.initialX = currentX;
+                ship.initialY = currentY;
                 ship.isPlaced = false;
                 this.ships.push(ship);
+                currentX += shipWidth + 10;
+                if (shipHeight > rowHeight) rowHeight = shipHeight;
             });
         }
         // Aggiorna la visibilità del reset dopo aver creato le navi
@@ -187,66 +219,26 @@ export default class SelectionScene extends Phaser.Scene {
             // Snap alla griglia se vicino
             const localX = gameObject.x;
             const localY = gameObject.y;
-            // Usa Math.round per migliorare la precisione dello snap
             const startCol = Math.round((localX - gridX) / cellSize);
             const startRow = Math.round((localY - gridY) / cellSize);
-            const widthCells = gameObject.widthCells || 1;
-            const heightCells = gameObject.heightCells || 1;
-            let earlyReturn = false;
-            // Nuovi limiti: permetti il piazzamento esatto al bordo
-            if (
-                startCol < 0 ||
-                startRow < 0 ||
-                startCol + widthCells > gridSize ||
-                startRow + heightCells > gridSize
-            ) {
-                // Torna alla posizione di partenza assoluta
-                if (typeof gameObject.initialX === 'number' && typeof gameObject.initialY === 'number') {
-                    gameObject.x = gameObject.initialX;
-                    gameObject.y = gameObject.initialY;
-                } else {
-                    gameObject.x = gameObject.input.dragStartX;
-                    gameObject.y = gameObject.input.dragStartY;
-                }
+            // Usa metodi Ship per validazione e occupazione
+            if (!gameObject.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
+                // Posizione non valida, torna alla posizione iniziale con animazione
+                gameObject.animateToInitialPosition(this);
                 gameObject.isPlaced = false;
-                earlyReturn = true;
             } else {
-                // Controlla sovrapposizione
-                let overlap = false;
-                for (let ix = 0; ix < widthCells; ix++) {
-                    for (let iy = 0; iy < heightCells; iy++) {
-                        if (this.occupiedGrid[startRow + iy][startCol + ix] && this.occupiedGrid[startRow + iy][startCol + ix] !== gameObject) {
-                            overlap = true;
-                        }
-                    }
-                }
-                if (overlap) {
-                    // Torna alla posizione iniziale
-                    gameObject.x = gameObject.input.dragStartX;
-                    gameObject.y = gameObject.input.dragStartY;
-                    gameObject.isPlaced = false;
-                    earlyReturn = true;
-                } else {
-                    // Libera le vecchie celle occupate da questa nave
-                    for (let r = 0; r < gridSize; r++) {
-                        for (let c = 0; c < gridSize; c++) {
-                            if (this.occupiedGrid[r][c] === gameObject) {
-                                this.occupiedGrid[r][c] = null;
-                            }
-                        }
-                    }
-                    // Segna le nuove celle occupate
-                    for (let ix = 0; ix < widthCells; ix++) {
-                        for (let iy = 0; iy < heightCells; iy++) {
-                            this.occupiedGrid[startRow + iy][startCol + ix] = gameObject;
-                        }
-                    }
-                    // Snap alla cella più vicina
-                    const snappedX = gridX + startCol * cellSize;
-                    const snappedY = gridY + startRow * cellSize;
-                    gameObject.x = snappedX;
-                    gameObject.y = snappedY;
-                    gameObject.isPlaced = true;
+                // Libera vecchie celle e occupa le nuove
+                gameObject.freeGrid(this.occupiedGrid);
+                gameObject.occupyGrid(startRow, startCol, this.occupiedGrid);
+                // Snap alla cella più vicina
+                gameObject.x = gridX + startCol * cellSize;
+                gameObject.y = gridY + startRow * cellSize;
+                // Suono di piazzamento nave (non sovrappone lo stesso suono)
+                if (this.sound && this.sound.play) {
+                    const placeSound = this.sound.add('placeShipSound', {
+                        loop: false
+                    });
+                    placeSound.play();
                 }
             }
             updateResetButtonVisibility();
@@ -274,14 +266,9 @@ export default class SelectionScene extends Phaser.Scene {
         this.add.existing(this.backToMenuButton);
 
         this.backToMenuButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
             // Salva le posizioni delle navi
-            this.registry.set('shipsPositions', this.ships.map(ship => ({
-                x: ship.x,
-                y: ship.y,
-                width: ship.widthCells,
-                height: ship.heightCells,
-                spriteKey: ship.spriteKey || null
-            })));
+            this.registry.set('shipsPositions', this.ships.map(ship => ship.getState()));
             this.scene.start('MainMenuScene');
         });
 
@@ -294,15 +281,26 @@ export default class SelectionScene extends Phaser.Scene {
             activeBackground: colors.tacao
         }).setOrigin(1, 1);
         this.add.existing(this.nextSceneButton);
-        // Salva le posizioni anche quando si va avanti
+
         this.nextSceneButton.on('buttonclick', () => {
-            this.registry.set('shipsPositions', this.ships.map(ship => ({
-                x: ship.x,
-                y: ship.y,
-                width: ship.widthCells,
-                height: ship.heightCells,
-                spriteKey: ship.spriteKey || null
-            })));
+            this.sound.play('clickSound');
+            // Controlla se tutte le navi sono posizionate
+            const allPlaced = this.ships.every(ship => ship.isPlaced);
+            if (!allPlaced) {
+                PopupManager.show(
+                    I18n.t('placeAllShipsError'),
+                    2000,
+                    this.cameras.main.centerX,
+                    490,
+                );
+                return;
+            }
+            this.registry.set('shipsPositions', this.ships.map(ship => ship.getState()));
+
+        });
+
+        this.nextSceneButton.on('pointerdown', () => {
+            PopupManager.hide();
         });
     }
 }

@@ -22,6 +22,7 @@ export default class StartScene extends Phaser.Scene {
 
         this.startButton.on('buttonclick', () => {
             this.scene.start("MainMenuScene");
+            this.sound.play('clickSound');
         });
         
         this.add.existing(this.startButton);

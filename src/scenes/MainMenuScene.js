@@ -138,6 +138,8 @@ export default class MainMenuScene extends Phaser.Scene {
 
         // Toggle volume on click
         this.volumeButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
+
             // Ciclo: 1 → 0.7 → 0 → 1
             if (this.volumeLevel === 1) {
                 this.volumeLevel = 0.7;
@@ -197,6 +199,8 @@ export default class MainMenuScene extends Phaser.Scene {
 
         // Listener per il bottone fullscreen
         this.fullScreenButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
+
             if (this.scale.isFullscreen) {
                 this.scale.stopFullscreen();
                 // Torna alle icone "entrambe OFF"
@@ -282,6 +286,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
         // Listener per il bottone versione
         this.versionText.on('buttonclick', () => {
+            this.sound.play('clickSound');
             this.scene.start('ChangeLogScene');
         });
 
@@ -298,6 +303,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
         // collega il click del bottone lingua
         this.langButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
             this.changeLanguage();
         });
 
@@ -330,7 +336,5 @@ export default class MainMenuScene extends Phaser.Scene {
         this.startGameButton.setText(I18n.t('start').toUpperCase());
         this.creditsText.setText(I18n.t('credits'));
     }
-
-
 
 }

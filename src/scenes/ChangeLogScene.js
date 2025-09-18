@@ -228,6 +228,7 @@ export default class ChangeLogScene extends Phaser.Scene {
 
         this.backToMenuButton.on('buttonclick', () => {
             this.scene.start('MainMenuScene');
+            this.sound.play('clickSound');
         });
     }
 

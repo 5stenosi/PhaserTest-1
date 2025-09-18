@@ -1,17 +1,14 @@
 import { colors } from "../colors.js";
-
 import { I18n } from "../i18n/i18n.js";
 
 export default class BootScene extends Phaser.Scene {
-    // Imposta a true per forzare almeno 1 secondo di caricamento
-    static forceMinLoadTime = false;
     constructor() {
         super("BootScene");
     }
 
 
     preload() {
-        // Background nero
+        // Background
         this.cameras.main.setBackgroundColor(colors.matisse);
 
         const centerX = this.cameras.main.width / 2;
@@ -21,62 +18,56 @@ export default class BootScene extends Phaser.Scene {
         this.loaderArcColor = parseInt(colors.tacao.replace('#', '0x'));
         this.drawLoaderArc(0);
 
-        this.load.on('progress', (value) => {
-            this.drawLoaderArc(value);
-        });
-        this.load.on('complete', () => {
-            this.drawLoaderArc(1);
-        });
+        this.load.on('progress', value => this.drawLoaderArc(value));
+        this.load.on('complete', () => this.drawLoaderArc(1));
+
+        // Risorse da caricare
+        const images = [
+            ['cursor-default', 'assets/cursors/cursor-default.png'],
+            ['mainMenuBattleship', 'assets/img/battleShip-1.png'],
+            ['rightArrow', 'assets/img/rightArrow.png'],
+            ['startButtonInactive', 'assets/img/startButtonInactive.png'],
+            ['startButtonActive', 'assets/img/startButtonActive.png'],
+            ['volumeOnInactive', 'assets/img/volumeOnInactive.png'],
+            ['volumeOnActive', 'assets/img/volumeOnActive.png'],
+            ['volumeLowInactive', 'assets/img/volumeLowInactive.png'],
+            ['volumeLowActive', 'assets/img/volumeLowActive.png'],
+            ['volumeOffInactive', 'assets/img/volumeOffInactive.png'],
+            ['volumeOffActive', 'assets/img/volumeOffActive.png'],
+            ['fullScreenOffInactive', 'assets/img/fullScreenOffInactive.png'],
+            ['fullScreenOffActive', 'assets/img/fullScreenOffActive.png'],
+            ['fullScreenOnInactive', 'assets/img/fullScreenOnInactive.png'],
+            ['fullScreenOnActive', 'assets/img/fullScreenOnActive.png'],
+            ['battleship1x1-Inactive', 'assets/img/raft.png'],
+            ['battleship2x1-Inactive', 'assets/img/inflatable.png'],
+            ['battleship3x1-Inactive', 'assets/img/gondola.png'],
+            ['battleship4x1-Inactive', 'assets/img/cargo.png'],
+            ['battleship1x1-Active', 'assets/img/raft-active.png'],
+            ['battleship2x1-Active', 'assets/img/inflatable-active.png'],
+            ['battleship3x1-Active', 'assets/img/gondola-active.png'],
+            ['battleship4x1-Active', 'assets/img/cargo-active.png'],
+            ['githubInactive', 'assets/img/githubInactive.png'],
+            ['githubActive', 'assets/img/githubActive.png'],
+            ['changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg'],
+        ];
+        images.forEach(([key, path]) => this.load.image(key, path));
 
         // Carica WebFont Loader
         this.load.script("webfont", "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js");
 
-        // Carica i cursori personalizzati
-        this.load.image('cursor-default', 'assets/cursors/cursor-default.png');
-
-        // Carica le immagini
-        this.load.image('mainMenuBattleship', 'assets/img/battleShip-1.png');
-
-        this.load.image('rightArrow', 'assets/img/rightArrow.png');
-
-        this.load.image('startButtonInactive', 'assets/img/startButtonInactive.png');
-        this.load.image('startButtonActive', 'assets/img/startButtonActive.png');
-
-        this.load.image('volumeOnInactive', 'assets/img/volumeOnInactive.png');
-        this.load.image('volumeOnActive', 'assets/img/volumeOnActive.png');
-        this.load.image('volumeLowInactive', 'assets/img/volumeLowInactive.png');
-        this.load.image('volumeLowActive', 'assets/img/volumeLowActive.png');
-        this.load.image('volumeOffInactive', 'assets/img/volumeOffInactive.png');
-        this.load.image('volumeOffActive', 'assets/img/volumeOffActive.png');
-
-        this.load.image('fullScreenOffInactive', 'assets/img/fullScreenOffInactive.png');
-        this.load.image('fullScreenOffActive', 'assets/img/fullScreenOffActive.png');
-        this.load.image('fullScreenOnInactive', 'assets/img/fullScreenOnInactive.png');
-        this.load.image('fullScreenOnActive', 'assets/img/fullScreenOnActive.png');
-
-        this.load.image('battleship1x1', 'assets/img/battleship1x1.png');
-        this.load.image('battleship2x1', 'assets/img/battleship2x1.png');
-        this.load.image('battleship3x1', 'assets/img/battleship3x1.png');
-        this.load.image('battleship4x1', 'assets/img/battleship4x1.png');
-
-        this.load.image('githubInactive', 'assets/img/githubInactive.png');
-        this.load.image('githubActive', 'assets/img/githubActive.png');
-
-        this.load.image('changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg');
-        this.load.image('selectionSceneBackground', 'assets/img/selectionSceneBackground.jpg');
-
-        // Carica i file audio
-        this.load.audio('menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3');
+        const audios = [
+            ['menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3'],
+            ['clickSound', 'assets/audio/sfxMouseClick.mp3'],
+            ['placeShipSound', 'assets/audio/sfxPlaceShip.mp3'],
+        ];
+        audios.forEach(([key, path]) => this.load.audio(key, path));
     }
 
     // Imposta il filtro NEAREST solo sulle texture delle battleship
     setBattleshipTexturesPixelPerfect() {
-        const keys = ['battleship1x1', 'battleship2x1', 'battleship3x1', 'battleship4x1'];
-        keys.forEach(key => {
+        ["battleship1x1", "battleship2x1", "battleship3x1", "battleship4x1"].forEach(key => {
             const tex = this.textures.get(key);
-            if (tex) {
-                tex.setFilter && tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
-            }
+            if (tex?.setFilter) tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
         });
     }
 
@@ -101,16 +92,14 @@ export default class BootScene extends Phaser.Scene {
                     "assets/fonts/PixelOperator8-Bold.ttf"
                 ]
             },
-            active: () => {
-                this.setLanguageFromBrowser();
-                this.scene.start("StartScene");
-            },
-            inactive: () => {
-                // Anche se fallisce, prova comunque ad avviare la scena
-                this.setLanguageFromBrowser();
-                this.scene.start("StartScene");
-            }
+            active: () => this.startWithLanguage(),
+            inactive: () => this.startWithLanguage()
         });
+    }
+
+    startWithLanguage() {
+        this.setLanguageFromBrowser();
+        this.scene.start("StartScene");
     }
 
     setLanguageFromBrowser() {

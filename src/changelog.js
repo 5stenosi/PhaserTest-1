@@ -14,7 +14,7 @@ export const changelogData = [
         ]
     },
     {
-        version: "v0.2.0",
+        version: "v0.2.1",
         date: "12-09-2025",
         features: [
             "feature_languageDetection",
@@ -23,7 +23,7 @@ export const changelogData = [
         ]
     },
     {
-        version: "v0.2.1",
+        version: "v0.2.2",
         date: "16-09-2025",
         features: [
             "fix_textPixelation",
@@ -34,7 +34,7 @@ export const changelogData = [
         ]
     },
     {
-        version: "v0.3.0",
+        version: "v0.3.2",
         date: "17-09-2025",
         features: [
             "feature_selectionScene",
@@ -43,6 +43,17 @@ export const changelogData = [
             "feature_battleshipDragAndDrop",
             "feature_battleshipPlacement",
             "feature_battleshipPlacementReset",
+        ]
+    },
+    {
+        version: "v0.4.2",
+        date: "17-09-2025",
+        features: [
+            "feature_battleshipSprites",
+            "feature_mouseClickSound",
+            "feature_placeShipSound",
+            "feature_resetShipAnimation",
+            "feature_popup",
         ]
     },
 ];
