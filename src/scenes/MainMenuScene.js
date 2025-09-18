@@ -320,6 +320,7 @@ export default class MainMenuScene extends Phaser.Scene {
         this.add.existing(this.startGameButton);
 
         this.startGameButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
             this.scene.start('SelectionScene');
         });
     }

@@ -1,3 +1,5 @@
+import { colors } from "../colors.js";
+
 export class Ship extends Phaser.GameObjects.Container {
     constructor(scene, x, y, config) {
         super(scene, x, y);
@@ -109,12 +111,37 @@ export class Ship extends Phaser.GameObjects.Container {
         return true;
     }
 
-    occupyGrid(startRow, startCol, occupiedGrid) {
+    occupyGrid(startRow, startCol, occupiedGrid, gridX = 0, gridY = 0) {
+        // Marca le celle occupate dalla nave
         for (let ix = 0; ix < this.widthCells; ix++) {
             for (let iy = 0; iy < this.heightCells; iy++) {
                 occupiedGrid[startRow + iy][startCol + ix] = this;
             }
         }
+
+        // Aggiungi celle adiacenti come occupate
+        const gridSize = occupiedGrid.length;
+        for (let dx = -1; dx <= this.widthCells; dx++) {
+            for (let dy = -1; dy <= this.heightCells; dy++) {
+                const adjRow = startRow + dy;
+                const adjCol = startCol + dx;
+                if (
+                    adjRow >= 0 && adjRow < gridSize &&
+                    adjCol >= 0 && adjCol < gridSize &&
+                    !occupiedGrid[adjRow][adjCol] // Solo se la cella non è già occupata
+                ) {
+                    const square = this.scene.add.rectangle(
+                        gridX + adjCol * this.cellSize + 2,
+                        gridY + adjRow * this.cellSize + 2,
+                        28, 28,
+                        Phaser.Display.Color.HexStringToColor(colors.tacao).color
+                    ).setOrigin(0);
+                    square.setDepth(-1); // Metti il quadrato sotto la nave
+                    occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata
+                }
+            }
+        }
+
         this.isPlaced = true;
     }
 
@@ -123,40 +150,67 @@ export class Ship extends Phaser.GameObjects.Container {
             for (let c = 0; c < occupiedGrid[r].length; c++) {
                 if (occupiedGrid[r][c] === this) {
                     occupiedGrid[r][c] = null;
+                } else if (
+                    occupiedGrid[r][c] instanceof Phaser.GameObjects.Rectangle &&
+                    occupiedGrid[r][c].depth === -1 // Check if it's an adjacent cell marker
+                ) {
+                    // Verifica se la cella adiacente è condivisa con altre navi
+                    const isShared = this.isAdjacentCellShared(r, c, occupiedGrid);
+                    if (!isShared) {
+                        occupiedGrid[r][c].destroy(); // Remove the visual marker
+                        occupiedGrid[r][c] = null; // Free the cell
+                    }
                 }
             }
         }
         this.isPlaced = false;
     }
 
-    /**
-     * Riposiziona la nave alla posizione iniziale
-     */
+    isAdjacentCellShared(row, col, occupiedGrid) {
+        const gridSize = occupiedGrid.length;
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1], // Cardinal directions
+            [-1, -1], [-1, 1], [1, -1], [1, 1] // Diagonal directions
+        ];
+
+        for (const [dr, dc] of directions) {
+            const adjRow = row + dr;
+            const adjCol = col + dc;
+            if (
+                adjRow >= 0 && adjRow < gridSize &&
+                adjCol >= 0 && adjCol < gridSize &&
+                occupiedGrid[adjRow][adjCol] instanceof Ship &&
+                occupiedGrid[adjRow][adjCol] !== this
+            ) {
+                return true; // La cella è condivisa con un'altra nave
+            }
+        }
+        return false;
+    }
+
     resetPosition() {
         this.x = this.initialX;
         this.y = this.initialY;
         this.isPlaced = false;
     }
 
-    animateToInitialPosition(scene, duration = 250) {
+    animateToPosition(scene, startX, startY, targetX, targetY, duration = 250) {
         return new Promise(resolve => {
+            this.x = startX;
+            this.y = startY;
             scene.tweens.add({
                 targets: this,
-                x: this.initialX,
-                y: this.initialY,
+                x: targetX,
+                y: targetY,
                 duration,
                 ease: 'Cubic.easeInOut',
                 onComplete: () => {
-                    this.isPlaced = false;
                     resolve();
                 }
             });
         });
     }
 
-    /**
-     * Restituisce lo stato serializzabile della nave
-     */
     getState() {
         return {
             x: this.x,

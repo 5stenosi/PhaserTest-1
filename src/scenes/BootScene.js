@@ -25,7 +25,8 @@ export default class BootScene extends Phaser.Scene {
         const images = [
             ['cursor-default', 'assets/cursors/cursor-default.png'],
             ['mainMenuBattleship', 'assets/img/battleShip-1.png'],
-            ['rightArrow', 'assets/img/rightArrow.png'],
+            ['rightArrowInactive', 'assets/img/rightArrowInactive.png'],
+            ['rightArrowActive', 'assets/img/rightArrowActive.png'],
             ['startButtonInactive', 'assets/img/startButtonInactive.png'],
             ['startButtonActive', 'assets/img/startButtonActive.png'],
             ['volumeOnInactive', 'assets/img/volumeOnInactive.png'],

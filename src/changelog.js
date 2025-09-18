@@ -56,4 +56,13 @@ export const changelogData = [
             "feature_popup",
         ]
     },
+    {
+        version: "v0.5.3",
+        date: "18-09-2025",
+        features: [
+            "fix_startClickSound",
+            "fix_animationToPosition",
+            "feature_shipAdjacentOccupiedCells",
+        ]
+    },
 ];

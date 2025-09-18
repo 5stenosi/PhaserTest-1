@@ -1,5 +1,3 @@
-
-
 export class ImageButton extends Phaser.GameObjects.Image {
     constructor(scene, x, y, textureInactive, textureActive, hitArea) {
         super(scene, x, y, textureInactive);

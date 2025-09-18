@@ -1,9 +1,10 @@
 import { TextButton } from "../game-objects/text-button.js";
 import { DashedLine } from "../game-objects/dashed-line.js";
+import { ImageButton } from "../game-objects/image-button.js";
+import { PopupManager } from "../game-objects/popup-manager.js";
 import { I18n } from "../i18n/i18n.js";
 import { colors } from "../colors.js";
 import { Ship } from "../game-objects/ship.js";
-import { PopupManager } from "../game-objects/popup-manager.js";
 
 export default class SelectionScene extends Phaser.Scene {
     constructor() {
@@ -43,8 +44,62 @@ export default class SelectionScene extends Phaser.Scene {
         });
 
 
-        // Freccia al centro della scena
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, "rightArrow").setOrigin(0.5);
+        this.placeRandomButton = new ImageButton(
+            this,
+            this.cameras.main.centerX,
+            this.cameras.main.centerY,
+            'rightArrowInactive',
+            'rightArrowActive',
+        ).setOrigin(0.5);
+        this.add.existing(this.placeRandomButton
+        );
+
+        this.placeRandomButton.on('buttonclick', () => {
+            this.sound.play('clickSound');
+
+            const gridSize = 10;
+            const cellSize = 32;
+            const gridX = bgWidth - gridSize * cellSize - 35;
+            const gridY = (bgHeight - gridSize * cellSize) / 2;
+
+            // Svuota prima la griglia dalle navi non piazzate
+            this.ships.forEach(ship => {
+                if (!ship.isPlaced) {
+                    ship.freeGrid(this.occupiedGrid);
+                }
+            });
+
+            // Piazza tutte le navi non piazzate
+            this.ships.forEach(ship => {
+                if (!ship.isPlaced) {
+                    let placed = false;
+                    let attempts = 0;
+
+                    while (!placed && attempts < 100) { // limite tentativi
+                        const startRow = Phaser.Math.Between(0, gridSize - ship.heightCells);
+                        const startCol = Phaser.Math.Between(0, gridSize - ship.widthCells);
+
+                        if (ship.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
+                            ship.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY);
+                            ship.x = gridX + startCol * cellSize;
+                            ship.y = gridY + startRow * cellSize;
+                            placed = true;
+                        }
+
+                        attempts++;
+                    }
+
+                    ship.animateToPosition(this, ship.initialX, ship.initialY, ship.x, ship.y);
+                }
+            });
+
+            // Aggiorna visibilità pulsante reset
+            updateResetButtonVisibility();
+
+            // Salva stato
+            const shipsPositions = this.ships.map(ship => ship.getState());
+            this.registry.set('shipsPositions', shipsPositions);
+        });
 
         // Pulsante reset navi sotto la freccia (TextButton)
         const resetButtonY = this.cameras.main.centerY + 110;
@@ -76,11 +131,13 @@ export default class SelectionScene extends Phaser.Scene {
             // Libera la matrice e resetta tutte le navi tramite i loro metodi
             this.ships.forEach(ship => ship.freeGrid(this.occupiedGrid));
             // Anima il ritorno di tutte le navi alla posizione iniziale
-            Promise.all(this.ships.map(ship => ship.animateToInitialPosition(this))).then(() => {
+            Promise.all(this.ships.map(ship => ship.animateToPosition(this, ship.x, ship.y, ship.initialX, ship.initialY))).then(() => {
                 updateResetButtonVisibility();
-                // Salva lo stato delle navi dopo il reset
-                const shipsPositions = this.ships.map(ship => ship.getState());
-                this.registry.set('shipsPositions', shipsPositions);
+                if (this.saveState) {
+                    // Salva lo stato solo se abilitato
+                    const shipsPositions = this.ships.map(ship => ship.getState());
+                    this.registry.set('shipsPositions', shipsPositions);
+                }
             });
         });
 
@@ -208,6 +265,9 @@ export default class SelectionScene extends Phaser.Scene {
             gameObject.setAlpha(0.7);
             this.children.bringToTop(gameObject);
             draggingShip = gameObject;
+
+            // Libera le celle occupate dalla nave selezionata
+            gameObject.freeGrid(this.occupiedGrid);
         });
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
             gameObject.x = dragX;
@@ -224,18 +284,19 @@ export default class SelectionScene extends Phaser.Scene {
             // Usa metodi Ship per validazione e occupazione
             if (!gameObject.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
                 // Posizione non valida, torna alla posizione iniziale con animazione
-                gameObject.animateToInitialPosition(this);
+                gameObject.animateToPosition(this, gameObject.x, gameObject.y, gameObject.initialX, gameObject.initialY);
                 gameObject.isPlaced = false;
             } else {
                 // Libera vecchie celle e occupa le nuove
                 gameObject.freeGrid(this.occupiedGrid);
-                gameObject.occupyGrid(startRow, startCol, this.occupiedGrid);
+                gameObject.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY); // Passa gridX e gridY
                 // Snap alla cella più vicina
                 gameObject.x = gridX + startCol * cellSize;
                 gameObject.y = gridY + startRow * cellSize;
                 // Suono di piazzamento nave (non sovrappone lo stesso suono)
                 if (this.sound && this.sound.play) {
                     const placeSound = this.sound.add('placeShipSound', {
+                        volume: 0.5,
                         loop: false
                     });
                     placeSound.play();
