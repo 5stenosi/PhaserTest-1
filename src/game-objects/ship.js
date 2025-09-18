@@ -13,6 +13,10 @@ export class Ship extends Phaser.GameObjects.Container {
         this.initialX = x;
         this.initialY = y;
 
+        // Store adjacent cell data separately from visual elements
+        this.adjacentCells = [];
+        this.gridPosition = { row: -1, col: -1 };
+
         // Sprite keys
         this.spriteKeyInactive = config.spriteKeyInactive || null;
         this.spriteKeyActive = config.spriteKeyActive || null;
@@ -112,6 +116,12 @@ export class Ship extends Phaser.GameObjects.Container {
     }
 
     occupyGrid(startRow, startCol, occupiedGrid, gridX = 0, gridY = 0) {
+        // Store grid position
+        this.gridPosition = { row: startRow, col: startCol };
+        
+        // Clear previous adjacent cells data
+        this.adjacentCells = [];
+
         // Marca le celle occupate dalla nave
         for (let ix = 0; ix < this.widthCells; ix++) {
             for (let iy = 0; iy < this.heightCells; iy++) {
@@ -119,7 +129,7 @@ export class Ship extends Phaser.GameObjects.Container {
             }
         }
 
-        // Aggiungi celle adiacenti come occupate
+        // Calculate and store adjacent cells data
         const gridSize = occupiedGrid.length;
         for (let dx = -1; dx <= this.widthCells; dx++) {
             for (let dy = -1; dy <= this.heightCells; dy++) {
@@ -130,13 +140,27 @@ export class Ship extends Phaser.GameObjects.Container {
                     adjCol >= 0 && adjCol < gridSize &&
                     !occupiedGrid[adjRow][adjCol] // Solo se la cella non è già occupata
                 ) {
+                    // Store adjacent cell data
+                    const adjacentCellData = {
+                        row: adjRow,
+                        col: adjCol,
+                        x: gridX + adjCol * this.cellSize + 2,
+                        y: gridY + adjRow * this.cellSize + 2
+                    };
+                    this.adjacentCells.push(adjacentCellData);
+                    
+                    // Create visual element
                     const square = this.scene.add.rectangle(
-                        gridX + adjCol * this.cellSize + 2,
-                        gridY + adjRow * this.cellSize + 2,
+                        adjacentCellData.x,
+                        adjacentCellData.y,
                         28, 28,
                         Phaser.Display.Color.HexStringToColor(colors.tacao).color
                     ).setOrigin(0);
                     square.setDepth(-1); // Metti il quadrato sotto la nave
+                    
+                    // Store reference to visual element in the data
+                    adjacentCellData.visual = square;
+                    
                     occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata
                 }
             }
@@ -145,24 +169,105 @@ export class Ship extends Phaser.GameObjects.Container {
         this.isPlaced = true;
     }
 
+    occupyGridWithDelay(startRow, startCol, occupiedGrid, gridX = 0, gridY = 0, delay = 0) {
+        return new Promise((resolve) => {
+            // Store grid position
+            this.gridPosition = { row: startRow, col: startCol };
+            
+            // Clear previous adjacent cells data
+            this.adjacentCells = [];
+
+            // Marca le celle occupate dalla nave
+            for (let ix = 0; ix < this.widthCells; ix++) {
+                for (let iy = 0; iy < this.heightCells; iy++) {
+                    occupiedGrid[startRow + iy][startCol + ix] = this;
+                }
+            }
+
+            // Calculate and store adjacent cells data
+            const gridSize = occupiedGrid.length;
+            for (let dx = -1; dx <= this.widthCells; dx++) {
+                for (let dy = -1; dy <= this.heightCells; dy++) {
+                    const adjRow = startRow + dy;
+                    const adjCol = startCol + dx;
+                    if (
+                        adjRow >= 0 && adjRow < gridSize &&
+                        adjCol >= 0 && adjCol < gridSize &&
+                        !occupiedGrid[adjRow][adjCol] // Solo se la cella non è già occupata
+                    ) {
+                        // Store adjacent cell data
+                        const adjacentCellData = {
+                            row: adjRow,
+                            col: adjCol,
+                            x: gridX + adjCol * this.cellSize + 2,
+                            y: gridY + adjRow * this.cellSize + 2
+                        };
+                        this.adjacentCells.push(adjacentCellData);
+                        occupiedGrid[adjRow][adjCol] = 'reserved'; // Temporarily reserve the cell
+                    }
+                }
+            }
+
+            // Create visual elements with delay
+            if (delay > 0) {
+                setTimeout(() => {
+                    this.createAdjacentCellVisuals(occupiedGrid);
+                    this.isPlaced = true;
+                    resolve();
+                }, delay);
+            } else {
+                this.createAdjacentCellVisuals(occupiedGrid);
+                this.isPlaced = true;
+                resolve();
+            }
+        });
+    }
+
+    createAdjacentCellVisuals(occupiedGrid) {
+        this.adjacentCells.forEach(cellData => {
+            const square = this.scene.add.rectangle(
+                cellData.x,
+                cellData.y,
+                28, 28,
+                Phaser.Display.Color.HexStringToColor(colors.tacao).color
+            ).setOrigin(0);
+            square.setDepth(-1);
+            
+            // Store reference to visual element
+            cellData.visual = square;
+            
+            // Update grid with visual element
+            occupiedGrid[cellData.row][cellData.col] = square;
+        });
+    }
+
     freeGrid(occupiedGrid) {
+        // Free cells occupied by the ship
         for (let r = 0; r < occupiedGrid.length; r++) {
             for (let c = 0; c < occupiedGrid[r].length; c++) {
                 if (occupiedGrid[r][c] === this) {
                     occupiedGrid[r][c] = null;
-                } else if (
-                    occupiedGrid[r][c] instanceof Phaser.GameObjects.Rectangle &&
-                    occupiedGrid[r][c].depth === -1 // Check if it's an adjacent cell marker
-                ) {
-                    // Verifica se la cella adiacente è condivisa con altre navi
-                    const isShared = this.isAdjacentCellShared(r, c, occupiedGrid);
-                    if (!isShared) {
-                        occupiedGrid[r][c].destroy(); // Remove the visual marker
-                        occupiedGrid[r][c] = null; // Free the cell
-                    }
                 }
             }
         }
+
+        // Free adjacent cells and destroy their visual elements
+        this.adjacentCells.forEach(cellData => {
+            if (cellData.visual) {
+                cellData.visual.destroy();
+            }
+            if (occupiedGrid[cellData.row] && occupiedGrid[cellData.row][cellData.col]) {
+                // Only free if it's our visual element or reserved marker
+                if (occupiedGrid[cellData.row][cellData.col] === cellData.visual || 
+                    occupiedGrid[cellData.row][cellData.col] === 'reserved') {
+                    occupiedGrid[cellData.row][cellData.col] = null;
+                }
+            }
+        });
+
+        // Clear stored data
+        this.adjacentCells = [];
+        this.gridPosition = { row: -1, col: -1 };
         this.isPlaced = false;
     }
 
@@ -219,7 +324,30 @@ export class Ship extends Phaser.GameObjects.Container {
             height: this.heightCells,
             active: this.activeState,
             spriteKeyInactive: this.spriteKeyInactive || null,
-            spriteKeyActive: this.spriteKeyActive || null
+            spriteKeyActive: this.spriteKeyActive || null,
+            gridPosition: this.gridPosition,
+            adjacentCells: this.adjacentCells.map(cell => ({
+                row: cell.row,
+                col: cell.col,
+                x: cell.x,
+                y: cell.y
+                // Don't store visual reference as it won't be valid across scenes
+            }))
         };
+    }
+
+    restoreAdjacentCells(savedData, occupiedGrid) {
+        if (savedData.adjacentCells && savedData.gridPosition) {
+            this.gridPosition = savedData.gridPosition;
+            this.adjacentCells = savedData.adjacentCells.map(cellData => ({
+                row: cellData.row,
+                col: cellData.col,
+                x: cellData.x,
+                y: cellData.y
+            }));
+            
+            // Recreate visual elements
+            this.createAdjacentCellVisuals(occupiedGrid);
+        }
     }
 }

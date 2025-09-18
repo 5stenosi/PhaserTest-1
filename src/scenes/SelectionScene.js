@@ -69,7 +69,8 @@ export default class SelectionScene extends Phaser.Scene {
                 }
             });
 
-            // Piazza tutte le navi non piazzate
+            // Piazza tutte le navi non piazzate con delay per celle adiacenti
+            const placementPromises = [];
             this.ships.forEach(ship => {
                 if (!ship.isPlaced) {
                     let placed = false;
@@ -80,7 +81,10 @@ export default class SelectionScene extends Phaser.Scene {
                         const startCol = Phaser.Math.Between(0, gridSize - ship.widthCells);
 
                         if (ship.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
-                            ship.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY);
+                            // Use the delayed version for random placement
+                            const delayPromise = ship.occupyGridWithDelay(startRow, startCol, this.occupiedGrid, gridX, gridY, 2000);
+                            placementPromises.push(delayPromise);
+                            
                             ship.x = gridX + startCol * cellSize;
                             ship.y = gridY + startRow * cellSize;
                             placed = true;
@@ -93,12 +97,15 @@ export default class SelectionScene extends Phaser.Scene {
                 }
             });
 
-            // Aggiorna visibilità pulsante reset
-            updateResetButtonVisibility();
+            // Wait for all adjacent cell visualizations to complete before enabling other actions
+            Promise.all(placementPromises).then(() => {
+                // Aggiorna visibilità pulsante reset
+                updateResetButtonVisibility();
 
-            // Salva stato
-            const shipsPositions = this.ships.map(ship => ship.getState());
-            this.registry.set('shipsPositions', shipsPositions);
+                // Salva stato
+                const shipsPositions = this.ships.map(ship => ship.getState());
+                this.registry.set('shipsPositions', shipsPositions);
+            });
         });
 
         // Pulsante reset navi sotto la freccia (TextButton)
@@ -221,6 +228,16 @@ export default class SelectionScene extends Phaser.Scene {
                     saved.y + (cfg.height * cellSize) <= gridY + gridHeight
                 ) {
                     ship.isPlaced = true;
+                    
+                    // Calculate grid position for placed ships
+                    const startCol = Math.round((saved.x - gridX) / cellSize);
+                    const startRow = Math.round((saved.y - gridY) / cellSize);
+                    
+                    // Occupy the grid and restore adjacent cells
+                    ship.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY);
+                    
+                    // Restore adjacent cells from saved data if available
+                    ship.restoreAdjacentCells(saved, this.occupiedGrid);
                 } else {
                     ship.isPlaced = false;
                 }
