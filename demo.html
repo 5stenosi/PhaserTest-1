@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ship Adjacent Cells Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #2c3e50;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 32px);
+            gap: 1px;
+            margin: 20px 0;
+            border: 2px solid #f2a269;
+            padding: 10px;
+            background-color: #34495e;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            border: 1px dashed #f2a269;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .ship {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        .adjacent {
+            background-color: #f2a269;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .adjacent.visible {
+            opacity: 0.7;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #f2a269;
+            color: #2c3e50;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #e67e22;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #34495e;
+            border-left: 4px solid #f2a269;
+        }
+        .log {
+            background-color: #1a252f;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚢 Ship Adjacent Cells Demo</h1>
+    <div class="info">
+        <h3>Demonstration of Enhanced Ship Placement Logic</h3>
+        <p>This demo shows the new adjacent cell storage and delayed visualization functionality:</p>
+        <ul>
+            <li><strong>Blue cells</strong> represent ships</li>
+            <li><strong>Orange cells</strong> represent adjacent/blocked areas</li>
+            <li>Adjacent cells appear with a configurable delay (2000ms for random placement)</li>
+            <li>All data is stored separately for persistence across scenes</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <button onclick="placeShipImmediate()">Place Ship (Immediate)</button>
+        <button onclick="placeShipWithDelay()">Place Ship (2000ms Delay)</button>
+        <button onclick="showSavedData()">Show Saved Data</button>
+        <button onclick="clearGrid()">Clear Grid</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+        let grid = Array.from({ length: 10 }, () => Array(10).fill(null));
+        let savedShipData = null;
+
+        function initializeGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${row}-${col}`;
+                    cell.textContent = `${row},${col}`;
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function placeShipImmediate() {
+            clearGrid();
+            const result = placeShip(3, 4, 2, 1, 0); // 2x1 ship at (3,4) with no delay
+            log(`Ship placed immediately with ${result.adjacentCells.length} adjacent cells`);
+        }
+
+        function placeShipWithDelay() {
+            clearGrid();
+            log('Placing ship with 2000ms delay for adjacent cells...');
+            const result = placeShip(5, 3, 2, 1, 2000); // 2x1 ship at (5,3) with 2000ms delay
+            log(`Ship positioned, adjacent cells will appear in 2000ms...`);
+        }
+
+        function placeShip(row, col, width, height, delay) {
+            // Place ship cells immediately
+            const shipCells = [];
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const r = row + j;
+                    const c = col + i;
+                    if (r < 10 && c < 10) {
+                        shipCells.push({row: r, col: c});
+                        grid[r][c] = 'ship';
+                        document.getElementById(`cell-${r}-${c}`).className = 'cell ship';
+                        document.getElementById(`cell-${r}-${c}`).textContent = '🚢';
+                    }
+                }
+            }
+
+            // Calculate adjacent cells
+            const adjacentCells = [];
+            for (let dx = -1; dx <= width; dx++) {
+                for (let dy = -1; dy <= height; dy++) {
+                    const adjRow = row + dy;
+                    const adjCol = col + dx;
+                    if (
+                        adjRow >= 0 && adjRow < 10 &&
+                        adjCol >= 0 && adjCol < 10 &&
+                        !grid[adjRow][adjCol]
+                    ) {
+                        adjacentCells.push({
+                            row: adjRow,
+                            col: adjCol,
+                            x: adjCol * 32 + 2,
+                            y: adjRow * 32 + 2
+                        });
+                        grid[adjRow][adjCol] = 'reserved';
+                    }
+                }
+            }
+
+            // Show adjacent cells with delay
+            const showAdjacent = () => {
+                adjacentCells.forEach(cell => {
+                    const cellElement = document.getElementById(`cell-${cell.row}-${cell.col}`);
+                    cellElement.className = 'cell adjacent';
+                    cellElement.textContent = '⚫';
+                    
+                    // Trigger the CSS animation
+                    setTimeout(() => {
+                        cellElement.classList.add('visible');
+                    }, 100);
+                    
+                    grid[cell.row][cell.col] = 'adjacent';
+                });
+                log(`${adjacentCells.length} adjacent cells visualized`);
+            };
+
+            if (delay > 0) {
+                setTimeout(showAdjacent, delay);
+            } else {
+                showAdjacent();
+            }
+
+            // Save data
+            savedShipData = {
+                gridPosition: { row, col },
+                shipCells,
+                adjacentCells,
+                timestamp: new Date().toISOString()
+            };
+
+            return savedShipData;
+        }
+
+        function showSavedData() {
+            if (savedShipData) {
+                log('=== SAVED SHIP DATA ===');
+                log(`Grid Position: (${savedShipData.gridPosition.row}, ${savedShipData.gridPosition.col})`);
+                log(`Ship Cells: ${savedShipData.shipCells.length}`);
+                log(`Adjacent Cells: ${savedShipData.adjacentCells.length}`);
+                log(`Saved at: ${savedShipData.timestamp}`);
+                log('Adjacent cell coordinates:');
+                savedShipData.adjacentCells.forEach((cell, index) => {
+                    log(`  ${index + 1}. Row: ${cell.row}, Col: ${cell.col}, X: ${cell.x}, Y: ${cell.y}`);
+                });
+                log('=== END DATA ===');
+            } else {
+                log('No ship data saved yet. Place a ship first!');
+            }
+        }
+
+        function clearGrid() {
+            grid = Array.from({ length: 10 }, () => Array(10).fill(null));
+            initializeGrid();
+            log('Grid cleared');
+        }
+
+        // Initialize the demo
+        initializeGrid();
+        log('Demo initialized. Click buttons to test ship placement functionality.');
+        log('This demonstrates the new adjacent cell storage and delayed visualization features.');
+    </script>
+</body>
+</html>
