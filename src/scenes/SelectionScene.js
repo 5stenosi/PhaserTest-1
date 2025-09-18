@@ -1,10 +1,13 @@
 import { TextButton } from "../game-objects/text-button.js";
 import { DashedLine } from "../game-objects/dashed-line.js";
 import { ImageButton } from "../game-objects/image-button.js";
-import { PopupManager } from "../game-objects/popup-manager.js";
+import { PopupManager } from "../managers/popup-manager.js";
 import { I18n } from "../i18n/i18n.js";
 import { colors } from "../colors.js";
 import { Ship } from "../game-objects/ship.js";
+import { DragDropManager } from "../managers/drag-drop-manager.js";
+import { shipsConfig } from "../config/ship-config.js";
+import { ShipManager } from "../managers/ship-manager.js";
 
 export default class SelectionScene extends Phaser.Scene {
     constructor() {
@@ -54,8 +57,14 @@ export default class SelectionScene extends Phaser.Scene {
         this.add.existing(this.placeRandomButton
         );
 
+        const placeSound = this.sound.add('placeShipSound', {
+            volume: 0.5,
+            loop: false
+        });
+
         this.placeRandomButton.on('buttonclick', () => {
             this.sound.play('clickSound');
+            placeSound.play();
 
             const gridSize = 10;
             const cellSize = 32;
@@ -69,35 +78,39 @@ export default class SelectionScene extends Phaser.Scene {
                 }
             });
 
-            // Piazza tutte le navi non piazzate
-            this.ships.forEach(ship => {
-                if (!ship.isPlaced) {
-                    let placed = false;
-                    let attempts = 0;
+            // Piazza tutte le navi non piazzate, ordinandole per dimensione decrescente
+            const shipsToPlace = this.ships.filter(ship => !ship.isPlaced).sort((a, b) => (b.widthCells * b.heightCells) - (a.widthCells * a.heightCells));
+            shipsToPlace.forEach(ship => {
+                let placed = false;
+                let attempts = 0;
 
-                    while (!placed && attempts < 100) { // limite tentativi
-                        const startRow = Phaser.Math.Between(0, gridSize - ship.heightCells);
-                        const startCol = Phaser.Math.Between(0, gridSize - ship.widthCells);
+                while (!placed && attempts < 1000) { // limite tentativi aumentato
+                    const startRow = Phaser.Math.Between(0, gridSize - ship.heightCells);
+                    const startCol = Phaser.Math.Between(0, gridSize - ship.widthCells);
 
-                        if (ship.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
-                            ship.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY);
-                            ship.x = gridX + startCol * cellSize;
-                            ship.y = gridY + startRow * cellSize;
-                            placed = true;
-                        }
-
-                        attempts++;
+                    if (ship.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
+                        ship.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY);
+                        ship.x = gridX + startCol * cellSize;
+                        ship.y = gridY + startRow * cellSize;
+                        placed = true;
                     }
 
-                    ship.animateToPosition(this, ship.initialX, ship.initialY, ship.x, ship.y);
+                    attempts++;
                 }
+
+                ship.animateToPosition(this, ship.initialX, ship.initialY, ship.x, ship.y);
+            });
+
+            // Mostra le celle adiacenti
+            this.ships.forEach(ship => {
+                if (ship.isPlaced) ship.showAdjacentCells(250);
             });
 
             // Aggiorna visibilità pulsante reset
             updateResetButtonVisibility();
 
             // Salva stato
-            const shipsPositions = this.ships.map(ship => ship.getState());
+            const shipsPositions = this.shipManager.saveShips();
             this.registry.set('shipsPositions', shipsPositions);
         });
 
@@ -121,21 +134,15 @@ export default class SelectionScene extends Phaser.Scene {
         this.resetShipsButton.setVisible(false);
 
         const updateResetButtonVisibility = () => {
-            // Mostra il reset solo se almeno una nave è nella griglia
-            const anyPlaced = this.ships.some(ship => ship.isPlaced);
-            this.resetShipsButton.setVisible(anyPlaced);
+            this.shipManager.updateResetButtonVisibility((visible) => this.resetShipsButton.setVisible(visible));
         };
 
         this.resetShipsButton.on('buttonclick', () => {
             this.sound.play('clickSound');
-            // Libera la matrice e resetta tutte le navi tramite i loro metodi
-            this.ships.forEach(ship => ship.freeGrid(this.occupiedGrid));
-            // Anima il ritorno di tutte le navi alla posizione iniziale
-            Promise.all(this.ships.map(ship => ship.animateToPosition(this, ship.x, ship.y, ship.initialX, ship.initialY))).then(() => {
+            this.shipManager.resetShips(() => {
                 updateResetButtonVisibility();
                 if (this.saveState) {
-                    // Salva lo stato solo se abilitato
-                    const shipsPositions = this.ships.map(ship => ship.getState());
+                    const shipsPositions = this.shipManager.saveShips();
                     this.registry.set('shipsPositions', shipsPositions);
                 }
             });
@@ -170,140 +177,19 @@ export default class SelectionScene extends Phaser.Scene {
             });
         }
 
-        // --- NAVI DRAGGABILI ---
         // Matrice per celle occupate (10x10)
         this.occupiedGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
-        // Definizione delle navi disponibili (facilmente estendibile)
-        this.shipsConfig = [
-            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
-            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
-            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
-            { width: 1, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship1x1-Inactive', spriteKeyActive: 'battleship1x1-Active' },
-            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
-            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
-            { width: 2, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship2x1-Inactive', spriteKeyActive: 'battleship2x1-Active' },
-            { width: 3, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship3x1-Inactive', spriteKeyActive: 'battleship3x1-Active' },
-            { width: 3, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship3x1-Inactive', spriteKeyActive: 'battleship3x1-Active' },
-            { width: 4, height: 1, color: colors.tacao, spriteKeyInactive: 'battleship4x1-Inactive', spriteKeyActive: 'battleship4x1-Active' },
-        ];
-        this.ships = [];
-        // Se ci sono dati salvati, ripristina le navi
+
         const savedShips = this.registry.get('shipsPositions');
-        if (Array.isArray(savedShips) && savedShips.length === this.shipsConfig.length) {
-            // Va a capo ogni volta che cambia il tipo di nave
-            const startX = 50;
-            const startY = 120;
-            const maxWidth = gridX - 20;
-            let currentX = startX;
-            let currentY = startY;
-            let rowHeight = 0;
-            let prevType = null;
-            this.shipsConfig.forEach((cfg, idx) => {
-                const saved = savedShips[idx];
-                const shipWidth = cfg.width * cellSize;
-                const shipHeight = cfg.height * cellSize;
-                // Va a capo se cambia tipo di nave
-                const currType = `${cfg.width}x${cfg.height}`;
-                if (prevType !== null && currType !== prevType) {
-                    currentX = startX;
-                    currentY += rowHeight + 10;
-                    rowHeight = 0;
-                }
-                prevType = currType;
-                const ship = new Ship(this, saved.x, saved.y, { ...cfg, cellSize });
-                ship.initialX = currentX;
-                ship.initialY = currentY;
-                // Considera la nave "piazzata" se è nella griglia
-                if (
-                    saved.x >= gridX &&
-                    saved.x + (cfg.width * cellSize) <= gridX + gridWidth &&
-                    saved.y >= gridY &&
-                    saved.y + (cfg.height * cellSize) <= gridY + gridHeight
-                ) {
-                    ship.isPlaced = true;
-                } else {
-                    ship.isPlaced = false;
-                }
-                this.ships.push(ship);
-                currentX += shipWidth + 10;
-                if (shipHeight > rowHeight) rowHeight = shipHeight;
-            });
-        } else {
-            // Va a capo ogni volta che cambia il tipo di nave
-            const startX = 50;
-            const startY = 120;
-            const maxWidth = gridX - 175;
-            let currentX = startX;
-            let currentY = startY;
-            let rowHeight = 0;
-            let prevType = null;
-            this.shipsConfig.forEach((cfg, idx) => {
-                const shipWidth = cfg.width * cellSize;
-                const shipHeight = cfg.height * cellSize;
-                const currType = `${cfg.width}x${cfg.height}`;
-                if (prevType !== null && currType !== prevType) {
-                    currentX = startX;
-                    currentY += rowHeight + 10;
-                    rowHeight = 0;
-                }
-                prevType = currType;
-                const ship = new Ship(this, currentX, currentY, { ...cfg, cellSize });
-                ship.initialX = currentX;
-                ship.initialY = currentY;
-                ship.isPlaced = false;
-                this.ships.push(ship);
-                currentX += shipWidth + 10;
-                if (shipHeight > rowHeight) rowHeight = shipHeight;
-            });
-        }
+        this.shipManager = new ShipManager(this, gridSize, cellSize, gridX, gridY, this.occupiedGrid, shipsConfig);
+        this.shipManager.createShips(savedShips);
+        this.ships = this.shipManager.getShips();
+
         // Aggiorna la visibilità del reset dopo aver creato le navi
         updateResetButtonVisibility();
 
-        // Drag & drop logica
-        let draggingShip = null;
-        this.input.on('dragstart', (pointer, gameObject) => {
-            gameObject.setAlpha(0.7);
-            this.children.bringToTop(gameObject);
-            draggingShip = gameObject;
-
-            // Libera le celle occupate dalla nave selezionata
-            gameObject.freeGrid(this.occupiedGrid);
-        });
-        this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            gameObject.x = dragX;
-            gameObject.y = dragY;
-        });
-        this.input.on('dragend', (pointer, gameObject) => {
-            gameObject.setAlpha(1);
-            draggingShip = null;
-            // Snap alla griglia se vicino
-            const localX = gameObject.x;
-            const localY = gameObject.y;
-            const startCol = Math.round((localX - gridX) / cellSize);
-            const startRow = Math.round((localY - gridY) / cellSize);
-            // Usa metodi Ship per validazione e occupazione
-            if (!gameObject.canPlaceAt(startRow, startCol, this.occupiedGrid)) {
-                // Posizione non valida, torna alla posizione iniziale con animazione
-                gameObject.animateToPosition(this, gameObject.x, gameObject.y, gameObject.initialX, gameObject.initialY);
-                gameObject.isPlaced = false;
-            } else {
-                // Libera vecchie celle e occupa le nuove
-                gameObject.freeGrid(this.occupiedGrid);
-                gameObject.occupyGrid(startRow, startCol, this.occupiedGrid, gridX, gridY); // Passa gridX e gridY
-                // Snap alla cella più vicina
-                gameObject.x = gridX + startCol * cellSize;
-                gameObject.y = gridY + startRow * cellSize;
-                // Suono di piazzamento nave (non sovrappone lo stesso suono)
-                if (this.sound && this.sound.play) {
-                    const placeSound = this.sound.add('placeShipSound', {
-                        volume: 0.5,
-                        loop: false
-                    });
-                    placeSound.play();
-                }
-            }
-            updateResetButtonVisibility();
-        });
+        // Inizializza DragDropManager
+        new DragDropManager(this, this.occupiedGrid, gridX, gridY, cellSize, this.ships, placeSound, updateResetButtonVisibility);
 
 
         // Linea tratteggiata sopra i bottoni
@@ -329,7 +215,7 @@ export default class SelectionScene extends Phaser.Scene {
         this.backToMenuButton.on('buttonclick', () => {
             this.sound.play('clickSound');
             // Salva le posizioni delle navi
-            this.registry.set('shipsPositions', this.ships.map(ship => ship.getState()));
+            this.registry.set('shipsPositions', this.shipManager.saveShips());
             this.scene.start('MainMenuScene');
         });
 
@@ -356,8 +242,9 @@ export default class SelectionScene extends Phaser.Scene {
                 );
                 return;
             }
-            this.registry.set('shipsPositions', this.ships.map(ship => ship.getState()));
+            this.registry.set('shipsPositions', this.shipManager.saveShips());
 
+            this.scene.start('GameScene');
         });
 
         this.nextSceneButton.on('pointerdown', () => {

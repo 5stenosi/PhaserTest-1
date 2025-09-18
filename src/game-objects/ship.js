@@ -13,11 +13,16 @@ export class Ship extends Phaser.GameObjects.Container {
         this.initialX = x;
         this.initialY = y;
 
+        // Celle adiacenti e occupate
+        this.adjacentCells = config.adjacentCells || [];
+        this.adjacentSquares = [];
+        this.occupiedCells = [];
+
         // Sprite keys
         this.spriteKeyInactive = config.spriteKeyInactive || null;
         this.spriteKeyActive = config.spriteKeyActive || null;
 
-        // Sprite attuale
+        // Stato attivo
         this.activeState = false;
 
         if (this.spriteKeyInactive || this.spriteKeyActive) {
@@ -47,14 +52,14 @@ export class Ship extends Phaser.GameObjects.Container {
                         ix * this.cellSize,
                         iy * this.cellSize,
                         this.cellSize - 4, this.cellSize - 4,
-                        this.color
+                        Phaser.Display.Color.HexStringToColor(colors.tacao).color
                     ).setOrigin(0);
                     this.add(rect);
                 }
             }
         }
 
-        // Aggiungi prima il container alla scena
+        // Aggiungi il container alla scena
         scene.add.existing(this);
 
         this.setSize(
@@ -62,7 +67,7 @@ export class Ship extends Phaser.GameObjects.Container {
             this.heightCells * this.cellSize
         );
 
-        // Rendi il container interattivo per il drag
+        // Rendi interattivo per il drag
         this.setInteractive(new Phaser.Geom.Rectangle(
             this.widthCells * this.cellSize / 2,
             this.heightCells * this.cellSize / 2,
@@ -70,7 +75,7 @@ export class Ship extends Phaser.GameObjects.Container {
             this.heightCells * this.cellSize
         ), Phaser.Geom.Rectangle.Contains);
 
-        // Abilita drag SOLO dopo che è stato aggiunto e reso interattivo
+        // Abilita drag
         scene.input.setDraggable(this);
     }
 
@@ -113,14 +118,20 @@ export class Ship extends Phaser.GameObjects.Container {
 
     occupyGrid(startRow, startCol, occupiedGrid, gridX = 0, gridY = 0) {
         // Marca le celle occupate dalla nave
+        this.occupiedCells = [];
         for (let ix = 0; ix < this.widthCells; ix++) {
             for (let iy = 0; iy < this.heightCells; iy++) {
-                occupiedGrid[startRow + iy][startCol + ix] = this;
+                const row = startRow + iy;
+                const col = startCol + ix;
+                occupiedGrid[row][col] = this;
+                this.occupiedCells.push({ row, col });
             }
         }
 
         // Aggiungi celle adiacenti come occupate
         const gridSize = occupiedGrid.length;
+        this.adjacentCells = [];
+        this.adjacentSquares = [];
         for (let dx = -1; dx <= this.widthCells; dx++) {
             for (let dy = -1; dy <= this.heightCells; dy++) {
                 const adjRow = startRow + dy;
@@ -130,13 +141,15 @@ export class Ship extends Phaser.GameObjects.Container {
                     adjCol >= 0 && adjCol < gridSize &&
                     !occupiedGrid[adjRow][adjCol] // Solo se la cella non è già occupata
                 ) {
+                    this.adjacentCells.push({ row: adjRow, col: adjCol });
                     const square = this.scene.add.rectangle(
                         gridX + adjCol * this.cellSize + 2,
                         gridY + adjRow * this.cellSize + 2,
                         28, 28,
                         Phaser.Display.Color.HexStringToColor(colors.tacao).color
-                    ).setOrigin(0);
+                    ).setOrigin(0).setAlpha(0);
                     square.setDepth(-1); // Metti il quadrato sotto la nave
+                    this.adjacentSquares.push(square);
                     occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata
                 }
             }
@@ -146,46 +159,26 @@ export class Ship extends Phaser.GameObjects.Container {
     }
 
     freeGrid(occupiedGrid) {
-        for (let r = 0; r < occupiedGrid.length; r++) {
-            for (let c = 0; c < occupiedGrid[r].length; c++) {
-                if (occupiedGrid[r][c] === this) {
-                    occupiedGrid[r][c] = null;
-                } else if (
-                    occupiedGrid[r][c] instanceof Phaser.GameObjects.Rectangle &&
-                    occupiedGrid[r][c].depth === -1 // Check if it's an adjacent cell marker
-                ) {
-                    // Verifica se la cella adiacente è condivisa con altre navi
-                    const isShared = this.isAdjacentCellShared(r, c, occupiedGrid);
-                    if (!isShared) {
-                        occupiedGrid[r][c].destroy(); // Remove the visual marker
-                        occupiedGrid[r][c] = null; // Free the cell
-                    }
-                }
-            }
-        }
+        // Libera le celle occupate dalla nave
+        this.occupiedCells.forEach(({ row, col }) => {
+            occupiedGrid[row][col] = null;
+        });
+        this.occupiedCells = [];
+
+        // Libera le celle adiacenti
+        this.adjacentSquares.forEach(square => square.destroy());
+        this.adjacentSquares = [];
+        this.adjacentCells.forEach(({ row, col }) => {
+            occupiedGrid[row][col] = null;
+        });
+        this.adjacentCells = [];
         this.isPlaced = false;
     }
 
-    isAdjacentCellShared(row, col, occupiedGrid) {
-        const gridSize = occupiedGrid.length;
-        const directions = [
-            [-1, 0], [1, 0], [0, -1], [0, 1], // Cardinal directions
-            [-1, -1], [-1, 1], [1, -1], [1, 1] // Diagonal directions
-        ];
-
-        for (const [dr, dc] of directions) {
-            const adjRow = row + dr;
-            const adjCol = col + dc;
-            if (
-                adjRow >= 0 && adjRow < gridSize &&
-                adjCol >= 0 && adjCol < gridSize &&
-                occupiedGrid[adjRow][adjCol] instanceof Ship &&
-                occupiedGrid[adjRow][adjCol] !== this
-            ) {
-                return true; // La cella è condivisa con un'altra nave
-            }
-        }
-        return false;
+    showAdjacentCells(delay = 0) {
+        this.scene.time.delayedCall(delay, () => {
+            this.adjacentSquares.forEach(square => square.setAlpha(1));
+        });
     }
 
     resetPosition() {
@@ -219,7 +212,9 @@ export class Ship extends Phaser.GameObjects.Container {
             height: this.heightCells,
             active: this.activeState,
             spriteKeyInactive: this.spriteKeyInactive || null,
-            spriteKeyActive: this.spriteKeyActive || null
+            spriteKeyActive: this.spriteKeyActive || null,
+            adjacentCells: this.adjacentCells,
+            occupiedCells: this.occupiedCells
         };
     }
 }

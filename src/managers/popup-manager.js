@@ -1,4 +1,4 @@
-import { Popup } from "./popup.js";
+import { Popup } from "../game-objects/popup.js";
 import { popupConfig } from "../config/popup-config.js";
 
 class PopupManager {

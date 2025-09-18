@@ -18,10 +18,15 @@ export default class BootScene extends Phaser.Scene {
         this.loaderArcColor = parseInt(colors.tacao.replace('#', '0x'));
         this.drawLoaderArc(0);
 
-        this.load.on('progress', value => this.drawLoaderArc(value));
-        this.load.on('complete', () => this.drawLoaderArc(1));
+        // Testo progresso
+        this.progressText = this.add.text(centerX, centerY + 110, 'Caricamento risorse... 0%', {
+            fontFamily: "Arial",
+            fontSize: "16px",
+            resolution: 3,
+            color: colors.tacao,
+        }).setOrigin(0.5);
 
-        // Risorse da caricare
+        // Conta totale file
         const images = [
             ['cursor-default', 'assets/cursors/cursor-default.png'],
             ['mainMenuBattleship', 'assets/img/battleShip-1.png'],
@@ -50,17 +55,31 @@ export default class BootScene extends Phaser.Scene {
             ['githubInactive', 'assets/img/githubInactive.png'],
             ['githubActive', 'assets/img/githubActive.png'],
             ['changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg'],
+            ['gameSceneBackground', 'assets/img/gameSceneBackground.jpg'],
         ];
-        images.forEach(([key, path]) => this.load.image(key, path));
-
-        // Carica WebFont Loader
-        this.load.script("webfont", "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js");
-
         const audios = [
             ['menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3'],
             ['clickSound', 'assets/audio/sfxMouseClick.mp3'],
             ['placeShipSound', 'assets/audio/sfxPlaceShip.mp3'],
         ];
+
+        this.totalFiles = images.length + audios.length + 1; // +1 per script webfont
+        this.loadedFiles = 0;
+
+        // Evento per aggiornare progresso
+        this.load.on('filecomplete', () => {
+            this.loadedFiles++;
+            this.updateProgress();
+        });
+
+        this.load.on('complete', () => this.updateProgress());
+
+        // Carica risorse
+        images.forEach(([key, path]) => this.load.image(key, path));
+
+        // Carica WebFont Loader
+        this.load.script("webfont", "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js");
+
         audios.forEach(([key, path]) => this.load.audio(key, path));
     }
 
@@ -72,9 +91,18 @@ export default class BootScene extends Phaser.Scene {
         });
     }
 
+    updateProgress() {
+        const progress = this.loadedFiles / this.totalFiles;
+        const percent = Math.floor(progress * 100);
+        this.progressText.setText(`Caricamento risorse... ${percent}%`);
+        this.drawLoaderArc(progress);
+    }
+
     create() {
         // Imposta filtro pixel perfect solo per le battleship
         this.setBattleshipTexturesPixelPerfect();
+        // Aggiorna progresso per font
+        this.progressText.setText('Caricamento font...');
         // Carica i font tramite WebFont Loader e avvia la scena Start solo dopo che i font sono pronti
         if (window.WebFont) {
             this.loadFontsAndStart();
@@ -100,7 +128,12 @@ export default class BootScene extends Phaser.Scene {
 
     startWithLanguage() {
         this.setLanguageFromBrowser();
-        this.scene.start("StartScene");
+        this.progressText.setText('Pronto!');
+        this.drawLoaderArc(1);
+        // Piccola pausa per mostrare "Pronto!"
+        this.time.delayedCall(500, () => {
+            this.scene.start("StartScene");
+        });
     }
 
     setLanguageFromBrowser() {

@@ -57,12 +57,23 @@ export const changelogData = [
         ]
     },
     {
-        version: "v0.5.3",
+        version: "v0.4.3",
         date: "18-09-2025",
         features: [
             "fix_startClickSound",
             "fix_animationToPosition",
             "feature_shipAdjacentOccupiedCells",
+        ]
+    },
+    {
+        version: "v0.4.4",
+        date: "18-09-2025",
+        features: [
+            "fix_shipPlacementLock",
+            "fix_shipRandomPlacementSound",
+            "fix_adjacentCellsRegistry",
+            "fix_selectionSceneOptimization",
+            "fix_loadingArc",
         ]
     },
 ];
