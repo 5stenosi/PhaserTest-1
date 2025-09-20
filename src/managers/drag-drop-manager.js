@@ -19,6 +19,26 @@ export class DragDropManager {
             this.scene.children.bringToTop(gameObject);
             this.draggingShip = gameObject;
 
+            // Riproduci suono di drag se presente
+            if (gameObject.dragSound) {
+                const sound = this.scene.sound.get(gameObject.dragSound);
+                if (sound) {
+                    this.scene.tweens.killTweensOf(sound);
+                    sound.stop();
+                    sound.setVolume(0.5);
+                    sound.play();
+
+                    this.scene.tweens.add({
+                        targets: sound,
+                        volume: { from: 0.5, to: 0 },
+                        duration: 1000,
+                        onComplete: () => {
+                            sound.stop();
+                        }
+                    });
+                }
+            }
+
             // Libera le celle occupate dalla nave selezionata
             gameObject.freeGrid(this.occupiedGrid);
         });
@@ -68,6 +88,9 @@ export class DragDropManager {
                 // Suono di piazzamento nave (non sovrappone lo stesso suono)
                 if (this.placeSound) {
                     this.placeSound.play();
+                }
+                if (this.clickSound) {
+                    this.clickSound.play();
                 }
             }
             if (this.updateResetButtonVisibility) {

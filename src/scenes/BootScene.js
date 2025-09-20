@@ -56,11 +56,26 @@ export default class BootScene extends Phaser.Scene {
             ['githubActive', 'assets/img/githubActive.png'],
             ['changeLogSceneBackground', 'assets/img/changeLogSceneBackground.jpg'],
             ['gameSceneBackground', 'assets/img/gameSceneBackground.jpg'],
+            ['turnArrow', 'assets/img/turnArrow.png'],
+            ['destroyedShip', 'assets/img/destroyedShip.png'],
+            ['cross-1', 'assets/img/cross-1.png'],
         ];
         const audios = [
             ['menuMusic', 'assets/audio/Overkill - After Dark 8 Bit Cover.mp3'],
             ['clickSound', 'assets/audio/sfxMouseClick.mp3'],
+            ['errorSound', 'assets/audio/sfxError.mp3'],
             ['placeShipSound', 'assets/audio/sfxPlaceShip.mp3'],
+            ['cargoShipSound', 'assets/audio/sfxCargoShip.mp3'],
+            ['gondolaShipSound', 'assets/audio/sfxGondolaShip.mp3'],
+            ['inflatableShipSound', 'assets/audio/sfxInflatableShip.mp3'],
+            ['raftShipSound', 'assets/audio/sfxRaftShip.mp3'],
+            ['changeTurn1Sound', 'assets/audio/sfxTurnChange1.mp3'],
+            ['changeTurn2Sound', 'assets/audio/sfxTurnChange2.mp3'],
+            ['waterBombSound', 'assets/audio/sfxWaterBomb.mp3'],
+            ['shipExplosionSound', 'assets/audio/sfxShipExplosion.mp3'],
+            ['softTypewriterSound', 'assets/audio/sfxTypewriterSoft.mp3'],
+            ['mediumTypewriterSound', 'assets/audio/sfxTypewriterMedium.mp3'],
+            ['hardTypewriterSound', 'assets/audio/sfxTypewriterHard.mp3'],
         ];
 
         this.totalFiles = images.length + audios.length + 1; // +1 per script webfont

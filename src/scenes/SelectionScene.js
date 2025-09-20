@@ -33,14 +33,13 @@ export default class SelectionScene extends Phaser.Scene {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "32px",
             resolution: 3,
-            color: colors.tacao,
-            wordWrap: { width: this.cameras.main.width - 35 },
+            color: colors.madang,
         }).setOrigin(0.5, 0);
 
         // Linea tratteggiata sotto il titolo
         new DashedLine(this, 35, 80, bgWidth - 70, {
             orientation: 'horizontal',
-            color: colors.tacao,
+            color: colors.madang,
             thickness: 2,
             dash: 4,
             gap: 2
@@ -58,6 +57,26 @@ export default class SelectionScene extends Phaser.Scene {
         );
 
         const placeSound = this.sound.add('placeShipSound', {
+            volume: 0.2,
+            loop: false
+        });
+
+        const cargoShipSound = this.sound.add('cargoShipSound', {
+            volume: 0.5,
+            loop: false
+        });
+
+        const gondolaShipSound = this.sound.add('gondolaShipSound', {
+            volume: 0.5,
+            loop: false
+        });
+
+        const inflatableShipSound = this.sound.add('inflatableShipSound', {
+            volume: 0.5,
+            loop: false
+        });
+
+        const raftShipSound = this.sound.add('raftShipSound', {
             volume: 0.5,
             loop: false
         });
@@ -124,10 +143,10 @@ export default class SelectionScene extends Phaser.Scene {
             {
                 fontFamily: "PixelOperator8-Bold",
                 fontSize: "18px",
-                color: colors.tacao,
+                color: colors.madang,
                 activeColor: colors.matisse,
                 backgroundColor: "rgba(0,0,0,0)",
-                activeBackground: colors.tacao
+                activeBackground: colors.madang
             }
         ).setOrigin(0.5);
         this.add.existing(this.resetShipsButton);
@@ -160,7 +179,7 @@ export default class SelectionScene extends Phaser.Scene {
         for (let i = 0; i <= gridSize; i++) {
             new DashedLine(this, gridX, gridY + i * cellSize, gridWidth, {
                 orientation: 'horizontal',
-                color: 'tacao',
+                color: 'madang',
                 thickness: 2,
                 dash: 8,
                 gap: 4
@@ -170,7 +189,7 @@ export default class SelectionScene extends Phaser.Scene {
         for (let i = 0; i <= gridSize; i++) {
             new DashedLine(this, gridX + i * cellSize, gridY, gridHeight, {
                 orientation: 'vertical',
-                color: 'tacao',
+                color: 'madang',
                 thickness: 2,
                 dash: 8,
                 gap: 4
@@ -195,7 +214,7 @@ export default class SelectionScene extends Phaser.Scene {
         // Linea tratteggiata sopra i bottoni
         new DashedLine(this, 35, 520, bgWidth - 70, {
             orientation: 'horizontal',
-            color: colors.tacao,
+            color: colors.madang,
             thickness: 2,
             dash: 4,
             gap: 2
@@ -205,10 +224,10 @@ export default class SelectionScene extends Phaser.Scene {
         this.backToMenuButton = new TextButton(this, 35, 575, I18n.t("backToMenu").toUpperCase(), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "16px",
-            color: colors.tacao,
+            color: colors.madang,
             activeColor: colors.matisse,
             backgroundColor: "rgba(0,0,0,0)",
-            activeBackground: colors.tacao
+            activeBackground: colors.madang
         }).setOrigin(0, 1);
         this.add.existing(this.backToMenuButton);
 
@@ -222,15 +241,14 @@ export default class SelectionScene extends Phaser.Scene {
         this.nextSceneButton = new TextButton(this, 865, 575, I18n.t('next').toUpperCase(), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "16px",
-            color: colors.tacao,
+            color: colors.madang,
             activeColor: colors.matisse,
             backgroundColor: "rgba(0,0,0,0)",
-            activeBackground: colors.tacao
+            activeBackground: colors.madang
         }).setOrigin(1, 1);
         this.add.existing(this.nextSceneButton);
 
         this.nextSceneButton.on('buttonclick', () => {
-            this.sound.play('clickSound');
             // Controlla se tutte le navi sono posizionate
             const allPlaced = this.ships.every(ship => ship.isPlaced);
             if (!allPlaced) {
@@ -239,9 +257,13 @@ export default class SelectionScene extends Phaser.Scene {
                     2000,
                     this.cameras.main.centerX,
                     490,
+                    null, null, null, null, null
                 );
+                this.sound.play('errorSound');
                 return;
             }
+            this.sound.play('clickSound');
+
             this.registry.set('shipsPositions', this.shipManager.saveShips());
 
             this.scene.start('GameScene');

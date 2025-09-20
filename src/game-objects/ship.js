@@ -25,6 +25,9 @@ export class Ship extends Phaser.GameObjects.Container {
         // Stato attivo
         this.activeState = false;
 
+        // Suono di drag
+        this.dragSound = config.dragSound || null;
+
         if (this.spriteKeyInactive || this.spriteKeyActive) {
             // Sprite INACTIVE
             if (this.spriteKeyInactive) {
@@ -131,26 +134,42 @@ export class Ship extends Phaser.GameObjects.Container {
         // Aggiungi celle adiacenti come occupate
         const gridSize = occupiedGrid.length;
         this.adjacentCells = [];
+        // Keep track only of squares this ship creates so we don't override others'
         this.adjacentSquares = [];
+        // Save grid origin to compute cleanup later
+        this._gridX = gridX;
+        this._gridY = gridY;
         for (let dx = -1; dx <= this.widthCells; dx++) {
             for (let dy = -1; dy <= this.heightCells; dy++) {
                 const adjRow = startRow + dy;
                 const adjCol = startCol + dx;
-                if (
-                    adjRow >= 0 && adjRow < gridSize &&
-                    adjCol >= 0 && adjCol < gridSize &&
-                    !occupiedGrid[adjRow][adjCol] // Solo se la cella non è già occupata
-                ) {
-                    this.adjacentCells.push({ row: adjRow, col: adjCol });
+
+                // Skip out of bounds
+                if (adjRow < 0 || adjRow >= gridSize || adjCol < 0 || adjCol >= gridSize) continue;
+
+                // Skip cells that are part of this ship
+                if (adjRow >= startRow && adjRow < startRow + this.heightCells && adjCol >= startCol && adjCol < startCol + this.widthCells) continue;
+
+                // If there's another ship occupying that cell, don't mark it as adjacent (can't place nor mark)
+                if (occupiedGrid[adjRow][adjCol] instanceof Ship) continue;
+
+                // Always record the adjacent coordinate for this ship (even if another ship already created an adjacent square there)
+                this.adjacentCells.push({ row: adjRow, col: adjCol });
+
+                // Only create a visible adjacent square and mark the grid if the cell is currently empty
+                if (!occupiedGrid[adjRow][adjCol]) {
                     const square = this.scene.add.rectangle(
                         gridX + adjCol * this.cellSize + 2,
                         gridY + adjRow * this.cellSize + 2,
                         28, 28,
-                        Phaser.Display.Color.HexStringToColor(colors.tacao).color
+                        Phaser.Display.Color.HexStringToColor(colors.madang).color
                     ).setOrigin(0).setAlpha(0);
                     square.setDepth(-1); // Metti il quadrato sotto la nave
+                    // attach coords so we can clean up safely later
+                    square._adjRow = adjRow;
+                    square._adjCol = adjCol;
                     this.adjacentSquares.push(square);
-                    occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata
+                    occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata (solo dai quadrati creati qui)
                 }
             }
         }
@@ -161,16 +180,25 @@ export class Ship extends Phaser.GameObjects.Container {
     freeGrid(occupiedGrid) {
         // Libera le celle occupate dalla nave
         this.occupiedCells.forEach(({ row, col }) => {
-            occupiedGrid[row][col] = null;
+            // Clear only if the grid still references this ship
+            if (occupiedGrid[row][col] === this) {
+                occupiedGrid[row][col] = null;
+            }
         });
         this.occupiedCells = [];
 
-        // Libera le celle adiacenti
-        this.adjacentSquares.forEach(square => square.destroy());
-        this.adjacentSquares = [];
-        this.adjacentCells.forEach(({ row, col }) => {
-            occupiedGrid[row][col] = null;
+        // Libera i quadrati adiacenti creati da questa nave
+        this.adjacentSquares.forEach(square => {
+            const r = square._adjRow;
+            const c = square._adjCol;
+            if (r !== undefined && c !== undefined && occupiedGrid[r][c] === square) {
+                occupiedGrid[r][c] = null;
+            }
+            square.destroy();
         });
+        this.adjacentSquares = [];
+
+        // Non cancellare le celle in adjacentCells: sono solo coordinate e potrebbero essere ora occupate da altri oggetti
         this.adjacentCells = [];
         this.isPlaced = false;
     }
@@ -214,7 +242,8 @@ export class Ship extends Phaser.GameObjects.Container {
             spriteKeyInactive: this.spriteKeyInactive || null,
             spriteKeyActive: this.spriteKeyActive || null,
             adjacentCells: this.adjacentCells,
-            occupiedCells: this.occupiedCells
+            occupiedCells: this.occupiedCells,
+            dragSound: this.dragSound
         };
     }
 }

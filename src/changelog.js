@@ -67,13 +67,30 @@ export const changelogData = [
     },
     {
         version: "v0.4.4",
-        date: "18-09-2025",
+        date: "19-09-2025",
         features: [
             "fix_shipPlacementLock",
             "fix_shipRandomPlacementSound",
             "fix_adjacentCellsRegistry",
             "fix_selectionSceneOptimization",
             "fix_loadingArc",
+        ]
+    },
+    {
+        version: "v1.5.5",
+        date: "20-09-2025",
+        features: [
+            "fix_colorUsage",
+            "feature_shipDragSound",
+            "feature_errorSound",
+            "feature_gameScene",
+            "feature_missedSound",
+            "feature_gameplayLogic",
+            "feature_CPUgameplayLogic",
+            "feature_winLoseMessages",
+            "feature_typewriterPopup",
+            "feature_autoPlayMode",
+            "feature_2XMode",
         ]
     },
 ];

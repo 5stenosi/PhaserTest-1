@@ -1,4 +1,4 @@
-import { translations } from './translations.js';
+import { translations } from '../i18n/translations.js';
 
 export const I18n = {
     currentLang: 'en', // lingua di default

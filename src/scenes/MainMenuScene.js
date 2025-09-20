@@ -23,8 +23,13 @@ export default class MainMenuScene extends Phaser.Scene {
         }
 
         // Sincronizza lingua attiva con I18n
-        this.availableLangs = Object.keys(translations);
-        this.currentLangIndex = this.availableLangs.indexOf(I18n.currentLang);
+        this.availableLangs = Object.keys(translations) || ["en"];
+        const initialLang = I18n.currentLang && this.availableLangs.includes(I18n.currentLang)
+            ? I18n.currentLang
+            : "en";
+
+        this.currentLangIndex = this.availableLangs.indexOf(initialLang);
+
         if (this.currentLangIndex === -1) this.currentLangIndex = 0;
 
         // Titolo del gioco in uppercase

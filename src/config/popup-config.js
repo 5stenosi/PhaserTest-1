@@ -7,5 +7,6 @@ export const popupConfig = {
     color: colors.matisse,
     backgroundColor: colors.tacao,
     padding: { left: 10, right: 10, top: 5, bottom: 5 },
+    lineSpacing: 30,
     duration: 2000
 };
