@@ -62,6 +62,7 @@ export const translations = {
         fix_loadingArc: "Fixed loading arc",
         fix_colorUsage: "Fixed color usage",
         fix_looseCondition: "Fixed lose condition",
+        fix_playerCPUturnDelay: "Fixed CPU player turn delay",
     },
     it: {
         start: "Gioca",
@@ -126,5 +127,6 @@ export const translations = {
         fix_loadingArc: "Corretto arco di caricamento",
         fix_colorUsage: "Corretto utilizzo colori",
         fix_looseCondition: "Corretta condizione di sconfitta",
+        fix_playerCPUturnDelay: "Corretto ritardo turno giocatore CPU",
     },
 };

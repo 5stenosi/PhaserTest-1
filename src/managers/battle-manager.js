@@ -189,14 +189,14 @@ export class BattleManager {
     endCpuTurn() {
         this.checkWinCondition();
         this.scene.handleTurnArrowClick();
-        this.scene.time.delayedCall(2000 * this.speedMultiplier, () => {
+        const delay = this.isAutoMode ? 2000 * this.speedMultiplier : 1000 * this.speedMultiplier;
+        this.scene.time.delayedCall(delay, () => {
+            this.isPlayerTurn = true;
             if (this.isAutoMode) {
-                this.isPlayerTurn = true;
                 if (!this.gameOver) {
                     this.simulatePlayerTurn();
                 }
             } else {
-                this.isPlayerTurn = true;
                 this.checkWinCondition();
             }
         });
@@ -274,7 +274,7 @@ export class BattleManager {
             overlay.setDepth(10);
             // Mostra vittoria giocatore
             PopupManager.show(I18n.t("playerWin"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true);
-            this.scene.time.delayedCall(6000, () => {
+            this.scene.time.delayedCall(8000, () => {
                 this.scene.scene.start("MainMenuScene");
             });
         } else if (playerShipsDestroyed) {
@@ -285,7 +285,7 @@ export class BattleManager {
             overlay.setDepth(10);
             // Mostra sconfitta giocatore
             PopupManager.show(I18n.t("playerLose"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true);
-            this.scene.time.delayedCall(6000, () => {
+            this.scene.time.delayedCall(8000, () => {
                 this.scene.scene.start("MainMenuScene");
             });
         }

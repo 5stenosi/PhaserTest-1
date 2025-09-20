@@ -98,6 +98,7 @@ export const changelogData = [
         date: "21-09-2025",
         features: [
             "fix_looseCondition",
+            "fix_playerCPUturnDelay",
         ]
     },
 ];
