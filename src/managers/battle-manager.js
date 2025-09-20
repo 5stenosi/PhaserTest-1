@@ -84,6 +84,7 @@ export class BattleManager {
                     this.cellSize,
                     this.cellSize
                 );
+                cell.setDepth(1);
                 cell.setInteractive();
                 cell.row = row;
                 cell.col = col;

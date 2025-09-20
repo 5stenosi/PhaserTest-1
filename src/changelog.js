@@ -93,4 +93,11 @@ export const changelogData = [
             "feature_2XMode",
         ]
     },
+    {
+        version: "v1.5.6",
+        date: "21-09-2025",
+        features: [
+            "fix_looseCondition",
+        ]
+    },
 ];

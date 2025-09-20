@@ -61,6 +61,7 @@ export const translations = {
         fix_selectionSceneOptimization: "Optimized SelectionScene",
         fix_loadingArc: "Fixed loading arc",
         fix_colorUsage: "Fixed color usage",
+        fix_looseCondition: "Fixed lose condition",
     },
     it: {
         start: "Gioca",
@@ -124,5 +125,6 @@ export const translations = {
         fix_selectionSceneOptimization: "Ottimizzata SelectionScene",
         fix_loadingArc: "Corretto arco di caricamento",
         fix_colorUsage: "Corretto utilizzo colori",
+        fix_looseCondition: "Corretta condizione di sconfitta",
     },
 };

@@ -156,14 +156,17 @@ export default class GameScene extends Phaser.Scene {
         // Matrice per celle occupate della CPU (10x10)
         this.cpuOccupiedGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
 
+        // Crea il battle manager (cpuManager null per ora)
+        this.battleManager = new BattleManager(this, gridSize, cellSize, gridX, gridY, rightGridX, rightGridY, this.playerOccupiedGrid, this.cpuOccupiedGrid, null);
+
         // Crea il manager CPU
-        this.cpuManager = new CpuManager(this, gridSize, cellSize, rightGridX, rightGridY, this.cpuOccupiedGrid, false);
+        this.cpuManager = new CpuManager(this, gridSize, cellSize, rightGridX, rightGridY, this.cpuOccupiedGrid, true, this.battleManager.cpuHitGrid);
 
         // Piazza le navi CPU
         this.cpuManager.placeShips();
 
-        // Crea il battle manager
-        this.battleManager = new BattleManager(this, gridSize, cellSize, gridX, gridY, rightGridX, rightGridY, this.playerOccupiedGrid, this.cpuOccupiedGrid, this.cpuManager);
+        // Assegna cpuManager al battleManager
+        this.battleManager.cpuManager = this.cpuManager;
 
         // Inizializza il popup manager
         PopupManager.initialize(this);

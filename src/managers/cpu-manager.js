@@ -2,7 +2,7 @@ import { Ship } from "../game-objects/ship.js";
 import { shipsConfig } from "../config/ship-config.js";
 
 export class CpuManager {
-    constructor(scene, gridSize, cellSize, gridX, gridY, occupiedGrid, cpuShipsVisible = false) {
+    constructor(scene, gridSize, cellSize, gridX, gridY, occupiedGrid, cpuShipsVisible = false, cpuHitGrid) {
         this.scene = scene;
         this.gridSize = gridSize;
         this.cellSize = cellSize;
@@ -11,7 +11,7 @@ export class CpuManager {
         this.occupiedGrid = occupiedGrid;
         this.cpuShipsVisible = cpuShipsVisible;
         this.cpuShips = [];
-        this.cpuHitGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null)); // Colpi della CPU sul giocatore
+        this.cpuHitGrid = cpuHitGrid; // Colpi della CPU sul giocatore
 
         // Stato per la modalità di caccia
         this.huntingMode = false;
