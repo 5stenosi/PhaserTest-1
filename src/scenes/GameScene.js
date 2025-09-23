@@ -81,12 +81,24 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // Testo sopra la griglia giocatore
-        this.add.text(gridX + gridWidth / 2, gridY - 20, I18n.t("player"), {
+        this.playerHeaderContainer = this.add.container(gridX, gridY - 30);
+        this.playerHeaderContainer.setSize(gridWidth, 20);
+
+        this.playerNameText = this.add.text(0, 0, I18n.t("player"), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "16px",
             resolution: 3,
             color: colors.madang,
-        }).setOrigin(0.5);
+        }).setOrigin(0, 0);
+
+        this.playerRemainingText = this.add.text(gridWidth, 0, "", {
+            fontFamily: "PixelOperator8-Bold",
+            fontSize: "16px",
+            resolution: 3,
+            color: colors.madang,
+        }).setOrigin(1, 0);
+
+        this.playerHeaderContainer.add([this.playerNameText, this.playerRemainingText]);
 
         // Carica e mostra le navi salvate
         const savedShips = this.registry.get('shipsPositions');
@@ -146,12 +158,24 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // Testo sopra la griglia CPU
-        this.add.text(rightGridX + gridWidth / 2, rightGridY - 20, I18n.t("cpu"), {
+        this.cpuHeaderContainer = this.add.container(rightGridX, rightGridY - 30);
+        this.cpuHeaderContainer.setSize(gridWidth, 20);
+
+        this.cpuNameText = this.add.text(0, 0, I18n.t("cpu"), {
             fontFamily: "PixelOperator8-Bold",
             fontSize: "16px",
             resolution: 3,
             color: colors.madang,
-        }).setOrigin(0.5);
+        }).setOrigin(0, 0);
+
+        this.cpuRemainingText = this.add.text(gridWidth, 0, "", {
+            fontFamily: "PixelOperator8-Bold",
+            fontSize: "16px",
+            resolution: 3,
+            color: colors.madang,
+        }).setOrigin(1, 0);
+
+        this.cpuHeaderContainer.add([this.cpuNameText, this.cpuRemainingText]);
 
         // Matrice per celle occupate della CPU (10x10)
         this.cpuOccupiedGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
@@ -160,7 +184,7 @@ export default class GameScene extends Phaser.Scene {
         this.battleManager = new BattleManager(this, gridSize, cellSize, gridX, gridY, rightGridX, rightGridY, this.playerOccupiedGrid, this.cpuOccupiedGrid, null);
 
         // Crea il manager CPU
-        this.cpuManager = new CpuManager(this, gridSize, cellSize, rightGridX, rightGridY, this.cpuOccupiedGrid, true, this.battleManager.cpuHitGrid);
+        this.cpuManager = new CpuManager(this, gridSize, cellSize, rightGridX, rightGridY, this.cpuOccupiedGrid, false, this.battleManager.cpuHitGrid);
 
         // Piazza le navi CPU
         this.cpuManager.placeShips();
@@ -172,6 +196,9 @@ export default class GameScene extends Phaser.Scene {
         PopupManager.initialize(this);
 
         this.speedMultiplier = 1;
+
+        // Aggiorna i testi delle navi rimanenti
+        this.updateRemainingShips();
 
 
         // Linea tratteggiata sopra i bottoni
@@ -296,5 +323,21 @@ export default class GameScene extends Phaser.Scene {
             this.turnArrow.scaleX *= -1; // Flip orizzontale
             this.turnArrow.setAlpha(1);
         });
+    }
+
+    updateRemainingShips() {
+        // Conta navi giocatore rimanenti (non completamente distrutte)
+        const playerRemaining = this.playerShips.filter(ship =>
+            !ship.occupiedCells.every(({ row, col }) => this.battleManager.cpuHitGrid[row][col] === 'hit')
+        ).length;
+
+        // Conta navi CPU rimanenti (non completamente distrutte)
+        const cpuRemaining = this.cpuManager.cpuShips.filter(ship =>
+            !ship.occupiedCells.every(({ row, col }) => this.battleManager.playerHitGrid[row][col] === 'hit')
+        ).length;
+
+        // Aggiorna testi
+        this.playerRemainingText.setText(`${playerRemaining} ${I18n.t("shipsRemaining")}`);
+        this.cpuRemainingText.setText(`${cpuRemaining} ${I18n.t("shipsRemaining")}`);
     }
 }

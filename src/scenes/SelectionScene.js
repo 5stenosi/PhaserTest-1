@@ -4,7 +4,6 @@ import { ImageButton } from "../game-objects/image-button.js";
 import { PopupManager } from "../managers/popup-manager.js";
 import { I18n } from "../i18n/i18n.js";
 import { colors } from "../colors.js";
-import { Ship } from "../game-objects/ship.js";
 import { DragDropManager } from "../managers/drag-drop-manager.js";
 import { shipsConfig } from "../config/ship-config.js";
 import { ShipManager } from "../managers/ship-manager.js";
@@ -15,7 +14,6 @@ export default class SelectionScene extends Phaser.Scene {
     }
 
     create() {
-
         PopupManager.initialize(this);
 
         // Dimensioni del background e del container visibile

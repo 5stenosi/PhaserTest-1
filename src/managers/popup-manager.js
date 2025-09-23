@@ -17,12 +17,12 @@ class PopupManager {
         }
     }
 
-    static show(text, duration = 2000, x = null, y = null, textColor = null, backgroundColor = null, style = null, fontSize = null, fontFamily = null, typewriter = false) {
+    static show(text, duration = 2000, x = null, y = null, textColor = null, backgroundColor = null, style = null, fontSize = null, fontFamily = null, typewriter = false, onComplete = null) {
         if (!this.instance) {
             console.error("PopupManager: Devi chiamare initialize(scene) prima di usare show.");
             return;
         }
-        this.instance.show({ text, duration, x, y, textColor, backgroundColor, style, fontSize, fontFamily, typewriter });
+        this.instance.show({ text, duration, x, y, textColor, backgroundColor, style, fontSize, fontFamily, typewriter, onComplete });
     }
 
     static hide() {

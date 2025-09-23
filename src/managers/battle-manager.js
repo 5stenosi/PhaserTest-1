@@ -255,6 +255,8 @@ export class BattleManager {
     }
 
     checkWinCondition() {
+        this.scene.updateRemainingShips();
+
         // Controlla se tutte le navi CPU sono distrutte
         const cpuShipsDestroyed = this.cpuManager.getShips().every(ship =>
             ship.occupiedCells.every(({ row, col }) => this.playerHitGrid[row][col] === 'hit')
@@ -273,8 +275,7 @@ export class BattleManager {
             overlay.setInteractive();
             overlay.setDepth(10);
             // Mostra vittoria giocatore
-            PopupManager.show(I18n.t("playerWin"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true);
-            this.scene.time.delayedCall(8000, () => {
+            PopupManager.show(I18n.t("playerWin"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true, () => {
                 this.scene.scene.start("MainMenuScene");
             });
         } else if (playerShipsDestroyed) {
@@ -284,8 +285,7 @@ export class BattleManager {
             overlay.setInteractive();
             overlay.setDepth(10);
             // Mostra sconfitta giocatore
-            PopupManager.show(I18n.t("playerLose"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true);
-            this.scene.time.delayedCall(8000, () => {
+            PopupManager.show(I18n.t("playerLose"), 3000, null, null, null, null, 'double', '48px', 'PixelOperator8-Bold', true, () => {
                 this.scene.scene.start("MainMenuScene");
             });
         }

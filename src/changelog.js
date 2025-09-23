@@ -101,4 +101,12 @@ export const changelogData = [
             "fix_playerCPUturnDelay",
         ]
     },
+    {
+        version: "v1.5.7",
+        date: "23-09-2025",
+        features: [
+            "fix_shipsleft",
+            "fix_popupTimer",
+        ]
+    },
 ];

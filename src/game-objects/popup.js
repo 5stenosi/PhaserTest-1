@@ -59,7 +59,8 @@ export class Popup extends Phaser.GameObjects.Container {
         style = null,
         fontSize = null,
         fontFamily = null,
-        typewriter = false
+        typewriter = false,
+        onComplete = null
     } = {}) {
         if (text !== null) {
             this.fullText = text;
@@ -122,6 +123,8 @@ export class Popup extends Phaser.GameObjects.Container {
             this.timer.remove(false);
         }
 
+        this.onComplete = onComplete;
+
         if (typewriter && text !== null) {
             this.startTypewriterEffect();
         } else {
@@ -129,6 +132,7 @@ export class Popup extends Phaser.GameObjects.Container {
             this.timer = this.scene.time.delayedCall(dur, () => {
                 this.setVisible(false);
                 this.timer = null;
+                if (this.onComplete) this.onComplete();
             });
         }
     }
@@ -190,8 +194,11 @@ export class Popup extends Phaser.GameObjects.Container {
             this.typewriterTimer.remove(false);
             this.typewriterTimer = null;
             this.timer = this.scene.time.delayedCall(3000, () => { // Default duration for typewriter popups
-                this.setVisible(false);
-                this.timer = null;
+                if (this.onComplete) this.onComplete();
+                this.scene.time.delayedCall(100, () => {
+                    this.setVisible(false);
+                    this.timer = null;
+                });
             });
         }
     }

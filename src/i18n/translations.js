@@ -15,6 +15,7 @@ export const translations = {
         playerWin: "In the end\nyou survived",
         playerLose: "Maybe\nsomeone\nwill find\nyour bones",
         TwoXError: "You need to enable AUTO mode first",
+        shipsRemaining: "ships",
         feature_bootScene: "BootScene",
         feature_startScene: "StartScene",
         feature_mainMenuScene: "MainMenuScene",
@@ -63,6 +64,8 @@ export const translations = {
         fix_colorUsage: "Fixed color usage",
         fix_looseCondition: "Fixed lose condition",
         fix_playerCPUturnDelay: "Fixed CPU player turn delay",
+        fix_shipsleft: "Fixed ships left display",
+        fix_popupTimer: "Fixed popup timer",
     },
     it: {
         start: "Gioca",
@@ -80,6 +83,7 @@ export const translations = {
         playerWin: "Alla fine sei\nsopravvissuto",
         playerLose: "Forse\nqualcuno\ntroverà\nle tue ossa",
         TwoXError: "Bisogna prima attivare la modalità AUTO",
+        shipsRemaining: "navi",
         feature_bootScene: "BootScene",
         feature_startScene: "StartScene",
         feature_mainMenuScene: "MainMenuScene",
@@ -128,5 +132,7 @@ export const translations = {
         fix_colorUsage: "Corretto utilizzo colori",
         fix_looseCondition: "Corretta condizione di sconfitta",
         fix_playerCPUturnDelay: "Corretto ritardo turno giocatore CPU",
+        fix_shipsleft: "Corretto display navi rimanenti",
+        fix_popupTimer: "Corretto timer popup",
     },
 };
