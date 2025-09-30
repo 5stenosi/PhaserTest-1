@@ -109,4 +109,12 @@ export const changelogData = [
             "fix_popupTimer",
         ]
     },
+    {
+        version: "v1.5.8",
+        date: "30-09-2025",
+        features: [
+            "fix_fullscreenRegistry",
+            "fix_volumeRegistry",
+        ]
+    },
 ];

@@ -12,7 +12,8 @@ export default class MainMenuScene extends Phaser.Scene {
 
     create() {
         // Stato volume: 1 = alto, 0.7 = medio, 0 = muto
-        this.volumeLevel = 0.7; // valori: 1, 0.7, 0
+        let savedVolume = this.registry.get('volumeLevel');
+        this.volumeLevel = (savedVolume !== undefined) ? savedVolume : 0.7; // valori: 1, 0.7, 0
 
         // Avvia la musica di menu se non già avviata, con volume coerente al livello intermedio
         if (!this.menuMusic) {
@@ -111,6 +112,13 @@ export default class MainMenuScene extends Phaser.Scene {
         ).setOrigin(0, 0);
         this.topLeftButtonsGroup.add(this.fullScreenButton);
 
+        // Imposta le texture in base allo stato attuale del fullscreen
+        if (this.scale.isFullscreen) {
+            this.fullScreenButton.textureInactive = 'fullScreenOnInactive';
+            this.fullScreenButton.textureActive = 'fullScreenOnActive';
+            this.fullScreenButton.setTexture('fullScreenOnInactive');
+        }
+
         // Bottone volume (ora a destra del fullscreen)
         this.volumeButton = new ImageButton(
             this,
@@ -154,6 +162,7 @@ export default class MainMenuScene extends Phaser.Scene {
                 this.volumeLevel = 1;
             }
             this.updateVolumeButtonTextures();
+            this.registry.set('volumeLevel', this.volumeLevel);
 
             if (this.menuMusic) {
                 const transitionDuration = 100; // ms, più veloce

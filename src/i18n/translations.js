@@ -66,6 +66,8 @@ export const translations = {
         fix_playerCPUturnDelay: "Fixed CPU player turn delay",
         fix_shipsleft: "Fixed ships left display",
         fix_popupTimer: "Fixed popup timer",
+        fix_fullscreenRegistry: "Fixed fullscreen registry",
+        fix_volumeRegistry: "Fixed volume registry",
     },
     it: {
         start: "Gioca",
@@ -134,5 +136,7 @@ export const translations = {
         fix_playerCPUturnDelay: "Corretto ritardo turno giocatore CPU",
         fix_shipsleft: "Corretto display navi rimanenti",
         fix_popupTimer: "Corretto timer popup",
+        fix_fullscreenRegistry: "Corretto registro schermo intero",
+        fix_volumeRegistry: "Corretto registro volume",
     },
 };
