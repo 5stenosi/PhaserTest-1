@@ -9,13 +9,21 @@ export class Ship extends Phaser.GameObjects.Container {
         this.cellSize = config.cellSize || 32;
         this.isPlaced = false;
 
+        // Configurazione pattern a pois per celle adiacenti
+        this.polkaDotRadius = config.polkaDotRadius || 1;
+        this.polkaDotPositions = config.polkaDotPositions || [
+            [6, 6], [16, 6], [26, 6],
+            [6, 16], [16, 16], [26, 16],
+            [6, 26], [16, 26], [26, 26]
+        ];
+
         // Per salvataggio/reset posizione iniziale
         this.initialX = x;
         this.initialY = y;
 
         // Celle adiacenti e occupate
         this.adjacentCells = config.adjacentCells || [];
-        this.adjacentSquares = [];
+        this.adjacentGraphics = [];
         this.occupiedCells = [];
 
         // Sprite keys
@@ -135,7 +143,7 @@ export class Ship extends Phaser.GameObjects.Container {
         const gridSize = occupiedGrid.length;
         this.adjacentCells = [];
         // Keep track only of squares this ship creates so we don't override others'
-        this.adjacentSquares = [];
+        this.adjacentGraphics = [];
         // Save grid origin to compute cleanup later
         this._gridX = gridX;
         this._gridY = gridY;
@@ -156,20 +164,24 @@ export class Ship extends Phaser.GameObjects.Container {
                 // Always record the adjacent coordinate for this ship (even if another ship already created an adjacent square there)
                 this.adjacentCells.push({ row: adjRow, col: adjCol });
 
-                // Only create a visible adjacent square and mark the grid if the cell is currently empty
+                // Only create a visible adjacent polka dot pattern and mark the grid if the cell is currently empty
                 if (!occupiedGrid[adjRow][adjCol]) {
-                    const square = this.scene.add.rectangle(
-                        gridX + adjCol * this.cellSize + 2,
-                        gridY + adjRow * this.cellSize + 2,
-                        28, 28,
-                        Phaser.Display.Color.HexStringToColor(colors.madang).color
-                    ).setOrigin(0).setAlpha(0);
-                    square.setDepth(-1); // Metti il quadrato sotto la nave
+                    const graphics = this.scene.add.graphics();
+                    const color = Phaser.Display.Color.HexStringToColor(colors.madang).color;
+                    graphics.fillStyle(color);
+                    const cellX = gridX + adjCol * this.cellSize;
+                    const cellY = gridY + adjRow * this.cellSize;
+                    // Draw polka dots based on configuration
+                    this.polkaDotPositions.forEach(([offsetX, offsetY]) => {
+                        graphics.fillCircle(cellX + offsetX, cellY + offsetY, this.polkaDotRadius);
+                    });
+                    graphics.setAlpha(0);
+                    graphics.setDepth(-1); // Metti il pattern sotto la nave
                     // attach coords so we can clean up safely later
-                    square._adjRow = adjRow;
-                    square._adjCol = adjCol;
-                    this.adjacentSquares.push(square);
-                    occupiedGrid[adjRow][adjCol] = square; // Segna la cella come occupata (solo dai quadrati creati qui)
+                    graphics._adjRow = adjRow;
+                    graphics._adjCol = adjCol;
+                    this.adjacentGraphics.push(graphics);
+                    occupiedGrid[adjRow][adjCol] = graphics; // Segna la cella come occupata (solo dai pattern creati qui)
                 }
             }
         }
@@ -187,16 +199,16 @@ export class Ship extends Phaser.GameObjects.Container {
         });
         this.occupiedCells = [];
 
-        // Libera i quadrati adiacenti creati da questa nave
-        this.adjacentSquares.forEach(square => {
-            const r = square._adjRow;
-            const c = square._adjCol;
-            if (r !== undefined && c !== undefined && occupiedGrid[r][c] === square) {
+        // Libera i pattern adiacenti creati da questa nave
+        this.adjacentGraphics.forEach(graphics => {
+            const r = graphics._adjRow;
+            const c = graphics._adjCol;
+            if (r !== undefined && c !== undefined && occupiedGrid[r][c] === graphics) {
                 occupiedGrid[r][c] = null;
             }
-            square.destroy();
+            graphics.destroy();
         });
-        this.adjacentSquares = [];
+        this.adjacentGraphics = [];
 
         // Non cancellare le celle in adjacentCells: sono solo coordinate e potrebbero essere ora occupate da altri oggetti
         this.adjacentCells = [];
@@ -205,7 +217,7 @@ export class Ship extends Phaser.GameObjects.Container {
 
     showAdjacentCells(delay = 0) {
         this.scene.time.delayedCall(delay, () => {
-            this.adjacentSquares.forEach(square => square.setAlpha(1));
+            this.adjacentGraphics.forEach(graphics => graphics.setAlpha(1));
         });
     }
 
@@ -243,7 +255,9 @@ export class Ship extends Phaser.GameObjects.Container {
             spriteKeyActive: this.spriteKeyActive || null,
             adjacentCells: this.adjacentCells,
             occupiedCells: this.occupiedCells,
-            dragSound: this.dragSound
+            dragSound: this.dragSound,
+            polkaDotRadius: this.polkaDotRadius,
+            polkaDotPositions: this.polkaDotPositions
         };
     }
 }

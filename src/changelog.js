@@ -117,4 +117,12 @@ export const changelogData = [
             "fix_volumeRegistry",
         ]
     },
+    {
+        version: "v1.5.9",
+        date: "04-10-2025",
+        features: [
+            "fix_blinkingTitleRemoved",
+            "fix_shipAdjacentOccupiedCellsView",
+        ]
+    },
 ];

@@ -62,16 +62,26 @@ export default class MainMenuScene extends Phaser.Scene {
 
         // Effetto lampeggio
         const showDuration = 1150;
-        const hideDuration = 150;
-        const showTexts = () => {
-            this.titleTexts.forEach(text => text.visible = true);
-            this.time.delayedCall(showDuration, hideTexts);
-        };
-        const hideTexts = () => {
+        const hideDuration = 0;
+
+        if (showDuration === 0) {
+            // Non lampeggiare, nascondi direttamente il titolo
             this.titleTexts.forEach(text => text.visible = false);
-            this.time.delayedCall(hideDuration, showTexts);
-        };
-        showTexts();
+        } else if (hideDuration === 0) {
+            // Non lampeggiare, mostra sempre il titolo
+            this.titleTexts.forEach(text => text.visible = true);
+        } else {
+            // Lampeggia normalmente
+            const showTexts = () => {
+                this.titleTexts.forEach(text => text.visible = true);
+                this.time.delayedCall(showDuration, hideTexts);
+            };
+            const hideTexts = () => {
+                this.titleTexts.forEach(text => text.visible = false);
+                this.time.delayedCall(hideDuration, showTexts);
+            };
+            showTexts();
+        }
 
 
         this.instagramButton = new TextButton(this, this.cameras.main.centerX, 585, "@stenosi", {
