@@ -69,7 +69,9 @@ export const translations = {
         fix_fullscreenRegistry: "Fixed fullscreen registry",
         fix_volumeRegistry: "Fixed volume registry",
         fix_blinkingTitleRemoved: "Removed blinking title",
-        fix_shipAdjacentOccupiedCellsView: "Fixed adjacent occupied cells view"
+        fix_shipAdjacentOccupiedCellsView: "Fixed adjacent occupied cells view",
+        fix_shipAdjacentOccupiedCellsView2: "Re-fixed adjacent occupied cells view",
+        fix_favicon: "Fixed favicon",
     },
     it: {
         start: "Gioca",
@@ -141,6 +143,8 @@ export const translations = {
         fix_fullscreenRegistry: "Corretto registro schermo intero",
         fix_volumeRegistry: "Corretto registro volume",
         fix_blinkingTitleRemoved: "Rimosso titolo lampeggiante",
-        fix_shipAdjacentOccupiedCellsView: "Corretta vista celle adiacenti"
+        fix_shipAdjacentOccupiedCellsView: "Corretta vista celle adiacenti",
+        fix_shipAdjacentOccupiedCellsView2: "Ri-corretta vista celle adiacenti",
+        fix_favicon: "Corretto favicon",
     },
 };

@@ -12,9 +12,10 @@ export class Ship extends Phaser.GameObjects.Container {
         // Configurazione pattern a pois per celle adiacenti
         this.polkaDotRadius = config.polkaDotRadius || 1;
         this.polkaDotPositions = config.polkaDotPositions || [
-            [6, 6], [16, 6], [26, 6],
-            [6, 16], [16, 16], [26, 16],
-            [6, 26], [16, 26], [26, 26]
+            [6, 6], [13, 6], [19, 6], [26, 6],
+            [6, 13], [13, 13], [19, 13], [26, 13],
+            [6, 19], [13, 19], [19, 19], [26, 19],
+            [6, 26], [13, 26], [19, 26], [26, 26]
         ];
 
         // Per salvataggio/reset posizione iniziale

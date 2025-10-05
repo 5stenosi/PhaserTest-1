@@ -125,4 +125,12 @@ export const changelogData = [
             "fix_shipAdjacentOccupiedCellsView",
         ]
     },
+    {
+        version: "v1.5.10",
+        date: "05-10-2025",
+        features: [
+            "fix_shipAdjacentOccupiedCellsView2",
+            "fix_favicon",
+        ]
+    },
 ];
